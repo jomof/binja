@@ -9,6 +9,10 @@ option(NINJA_FORCE_PSELECT "Use pselect() even on platforms that provide ppoll()
 
 project(ninja CXX)
 
+if(POLICY CMP0135)
+  cmake_policy(SET CMP0135 NEW)
+endif()
+
 # --- protobuf
 include(ExternalProject)
 
@@ -35,8 +39,8 @@ add_dependencies(libprotobuf protobuf)
 
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/proto-gen)
 add_custom_command(
-  OUTPUT ${CMAKE_BINARY_DIR}/gen/binja.pb.cc
-         ${CMAKE_BINARY_DIR}/gen/binja.pb.h
+  OUTPUT ${CMAKE_BINARY_DIR}/proto-gen/binja.pb.cc
+         ${CMAKE_BINARY_DIR}/proto-gen/binja.pb.h
   COMMAND ${PROTOBUF_PROTOC_EXECUTABLE}
   ARGS -I ${CMAKE_SOURCE_DIR}/src
        --cpp_out proto-gen
