@@ -9,6 +9,19 @@ option(NINJA_FORCE_PSELECT "Use pselect() even on platforms that provide ppoll()
 
 project(ninja CXX)
 
+# --- protobuf
+add_custom_command(
+#  OUTPUT "${PROTO_SRC_DIR}/${PROTO_FILE_NAME}.pb.cc"
+#         "${PROTO_SRC_DIR}/${PROTO_FILE_NAME}.pb.h"
+  COMMAND protoc
+  ARGS --version
+#  ARGS -I "${PROTO_PATH}"
+#       --cpp_out="${PROTO_SRC_DIR}"
+#       "${PROTO_FILE}"
+#  DEPENDS "${PROTO_FILE}"
+  COMMENT "Running C++ protocol buffer compiler on ${PROTO_FILE}"
+  VERBATIM )
+
 # --- optional link-time optimization
 check_ipo_supported(RESULT lto_supported OUTPUT error)
 
