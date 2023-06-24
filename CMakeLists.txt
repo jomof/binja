@@ -9,29 +9,6 @@ option(NINJA_FORCE_PSELECT "Use pselect() even on platforms that provide ppoll()
 
 project(ninja CXX)
 
-# --- Protobuf support
-set(PROTOBUF_VERSION "3.20.3")  # Replace with desired version
-set(PROTOBUF_PREFIX "${CMAKE_BINARY_DIR}/protobuf")
-
-ExternalProject_Add(protobuf
-  PREFIX ${PROTOBUF_PREFIX}
-  URL "https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOBUF_VERSION}/protobuf-cpp-${PROTOBUF_VERSION}.tar.gz"
-  CONFIGURE_COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" ../protobuf/cmake -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -Dprotobuf_BUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
-  BUILD_COMMAND ${CMAKE_COMMAND} --build .
-  INSTALL_COMMAND ""
-  #DOWNLOAD_EXTRACT_TIMESTAMP false
-)
-
-ExternalProject_Get_Property(protobuf source_dir binary_dir)
-
-set(PROTOBUF_INCLUDE_DIR ${source_dir}/src)
-set(PROTOBUF_LIBRARY ${binary_dir}/${CMAKE_FIND_LIBRARY_PREFIXES}protobuf${CMAKE_STATIC_LIBRARY_SUFFIX})
-set(PROTOBUF_PROTOC_EXECUTABLE ${binary_dir}/protoc)
-
-add_library(libprotobuf STATIC IMPORTED)
-set_target_properties(libprotobuf PROPERTIES IMPORTED_LOCATION ${PROTOBUF_LIBRARY})
-add_dependencies(libprotobuf protobuf)
-
 # --- optional link-time optimization
 check_ipo_supported(RESULT lto_supported OUTPUT error)
 
