@@ -10,17 +10,40 @@ option(NINJA_FORCE_PSELECT "Use pselect() even on platforms that provide ppoll()
 project(ninja CXX)
 
 # --- protobuf
+include(ExternalProject)
+
+set(PROTOBUF_VERSION "3.17.3")  # Replace with desired version
+set(PROTOBUF_PREFIX "${CMAKE_BINARY_DIR}/protobuf")
+
+ExternalProject_Add(protobuf
+  PREFIX ${PROTOBUF_PREFIX}
+  URL "https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOBUF_VERSION}/protobuf-cpp-${PROTOBUF_VERSION}.tar.gz"
+  CONFIGURE_COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" ../protobuf/cmake -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -Dprotobuf_BUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+  BUILD_COMMAND ${CMAKE_COMMAND} --build .
+  INSTALL_COMMAND ""
+)
+
+ExternalProject_Get_Property(protobuf source_dir binary_dir)
+
+set(PROTOBUF_INCLUDE_DIR ${source_dir}/src)
+set(PROTOBUF_LIBRARY ${binary_dir}/${CMAKE_FIND_LIBRARY_PREFIXES}protobuf${CMAKE_STATIC_LIBRARY_SUFFIX})
+set(PROTOBUF_PROTOC_EXECUTABLE ${binary_dir}/protoc)
+
+add_library(libprotobuf STATIC IMPORTED)
+set_target_properties(libprotobuf PROPERTIES IMPORTED_LOCATION ${PROTOBUF_LIBRARY})
+add_dependencies(libprotobuf protobuf)
+
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/proto-gen)
 add_custom_command(
-#  OUTPUT "${PROTO_SRC_DIR}/${PROTO_FILE_NAME}.pb.cc"
-#         "${PROTO_SRC_DIR}/${PROTO_FILE_NAME}.pb.h"
-  COMMAND protoc
-  ARGS --version
-#  ARGS -I "${PROTO_PATH}"
-#       --cpp_out="${PROTO_SRC_DIR}"
-#       "${PROTO_FILE}"
-#  DEPENDS "${PROTO_FILE}"
-  COMMENT "Running C++ protocol buffer compiler on ${PROTO_FILE}"
-  VERBATIM )
+  OUTPUT ${CMAKE_BINARY_DIR}/gen/binja.pb.cc
+         ${CMAKE_BINARY_DIR}/gen/binja.pb.h
+  COMMAND ${PROTOBUF_PROTOC_EXECUTABLE}
+  ARGS -I ${CMAKE_SOURCE_DIR}/src
+       --cpp_out proto-gen
+       binja.proto
+  DEPENDS src/binja.proto
+  COMMENT "Running C++ protocol buffer compiler on binja.proto"
+  VERBATIM)
 
 # --- optional link-time optimization
 check_ipo_supported(RESULT lto_supported OUTPUT error)
@@ -129,6 +152,7 @@ check_platform_supports_browse_mode(platform_supports_ninja_browse)
 
 # Core source files all build into ninja library.
 add_library(libninja OBJECT
+    ${CMAKE_BINARY_DIR}/proto-gen/binja.pb.cc
 	src/build_log.cc
 	src/build.cc
 	src/clean.cc
@@ -154,6 +178,10 @@ add_library(libninja OBJECT
 	src/util.cc
 	src/version.cc
 )
+target_include_directories(libninja PRIVATE
+	${CMAKE_BINARY_DIR}/proto-gen
+	${PROTOBUF_INCLUDE_DIR})
+
 if(WIN32)
 	target_sources(libninja PRIVATE
 		src/subprocess-win32.cc
@@ -199,7 +227,7 @@ endif()
 # Main executable is library plus main() function.
 if(NINJA_BUILD_BINARY)
 	add_executable(ninja src/ninja.cc)
-	target_link_libraries(ninja PRIVATE libninja libninja-re2c)
+	target_link_libraries(ninja PRIVATE libninja libninja-re2c libprotobuf)
 
 	if(WIN32)
 		target_sources(ninja PRIVATE windows/ninja.manifest)
@@ -262,7 +290,7 @@ if(BUILD_TESTING)
   if(WIN32)
     target_sources(ninja_test PRIVATE src/includes_normalize_test.cc src/msvc_helper_test.cc)
   endif()
-  target_link_libraries(ninja_test PRIVATE libninja libninja-re2c)
+  target_link_libraries(ninja_test PRIVATE libninja libninja-re2c libprotobuf)
 
   foreach(perftest
     build_log_perftest
@@ -273,7 +301,7 @@ if(BUILD_TESTING)
     manifest_parser_perftest
   )
     add_executable(${perftest} src/${perftest}.cc)
-    target_link_libraries(${perftest} PRIVATE libninja libninja-re2c)
+    target_link_libraries(${perftest} PRIVATE libninja libninja-re2c libprotobuf)
   endforeach()
 
   if(CMAKE_SYSTEM_NAME STREQUAL "AIX" AND CMAKE_SIZEOF_VOID_P EQUAL 4)
