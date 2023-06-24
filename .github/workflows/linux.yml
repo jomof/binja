@@ -178,12 +178,16 @@ jobs:
           # BUILD
           cmake -DCMAKE_BUILD_TYPE=Release -B release-build
           cmake --build release-build --parallel --config Release
+          echo Done with Release build-----------------------
           strip release-build/ninja
+          echo Done with Release strip-----------------------
           file release-build/ninja
 
           # TEST
           pushd release-build
+           echo About to run tests---------------------------
           ./ninja_test
+          echo Done with running tests-----------------------
           popd
 
           # CREATE ARCHIVE
