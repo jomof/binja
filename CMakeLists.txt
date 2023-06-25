@@ -69,7 +69,7 @@ endif()
 #set_target_properties(libprotobuf PROPERTIES IMPORTED_LOCATION ${PROTOBUF_LIBRARY})
 #add_dependencies(libprotobuf protobuf-host)
 #
-#file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/proto-gen)
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/proto-gen)
 #protobuf-23.3/src
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -88,7 +88,7 @@ add_custom_command(
   ARGS -I ${CMAKE_SOURCE_DIR}/src
        --cpp_out proto-gen
        binja.proto
-  DEPENDS src/binja.proto
+  DEPENDS src/binja.proto vendor/google/protocolbuffers/protobuf-23.3/protoc
   COMMENT "Running C++ protocol buffer compiler on binja.proto"
   VERBATIM)
 
