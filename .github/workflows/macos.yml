@@ -20,7 +20,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: ~/.sccache
-         key: ${{ runner.os }}-sccache
+        key: ${{ runner.os }}-sccache
       
     - name: Generate Ninja
       shell: bash
