@@ -21,8 +21,8 @@ jobs:
       env:
         MACOSX_DEPLOYMENT_TARGET: 10.15
       run: |
-        cmake -GXcode -Bbuild-arm64 '-DCMAKE_OSX_ARCHITECTURES=arm64'
-        cmake -GXcode -Bbuild-x86_64 '-DCMAKE_OSX_ARCHITECTURES=x86_64'
+        cmake -Bbuild-arm64 '-DCMAKE_OSX_ARCHITECTURES=arm64'
+        cmake -Bbuild-x86_64 '-DCMAKE_OSX_ARCHITECTURES=x86_64'
         cmake --build build-arm64 --config Release
         cmake --build build-x86_64 --config Release
 
