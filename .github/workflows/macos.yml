@@ -16,41 +16,23 @@ jobs:
     - name: Install dependencies
       run: brew install re2c p7zip cmake
       
-    - name: Generate Ninja (arm64)
+    - name: Generate Ninja
       shell: bash
       env:
         MACOSX_DEPLOYMENT_TARGET: 10.15
       run: |
-        cmake -Bbuild-arm64 '-DCMAKE_OSX_ARCHITECTURES=arm64'
+        cmake -Bbuild '-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64'
 
-    - name: Generate Ninja (x86_64)
+    - name: Build ninja
       shell: bash
       env:
         MACOSX_DEPLOYMENT_TARGET: 10.15
       run: |
-        cmake -Bbuild-x86_64 '-DCMAKE_OSX_ARCHITECTURES=x86_64'
+        cmake --build build --config Release
 
-    - name: Build ninja (arm64)
-      shell: bash
-      env:
-        MACOSX_DEPLOYMENT_TARGET: 10.15
-      run: |
-        cmake --build build-arm64 --config Release
-        
-    - name: Build ninja (x86_64)
-      shell: bash
-      env:
-        MACOSX_DEPLOYMENT_TARGET: 10.15
-      run: |
-        cmake --build build-x86_64 --config Release
-
-    - name: Test ninja (arm64)
+    - name: Test ninja
       run: ctest -C Release -vv
-      working-directory: build-arm64
-      
-    - name: Test ninja (x86_64)
-      run: ctest -C Release -vv
-      working-directory: build-x86_64
+      working-directory: build
 
     - name: Create ninja archive (arm64)
       shell: bash
@@ -58,11 +40,11 @@ jobs:
         mkdir artifact
         7z a artifact/ninja-mac-arm64.zip ./build-arm64/Release/ninja
     
-    - name: Create ninja archive (x86_64)
+    - name: Create ninja archive
       shell: bash
       run: |
         mkdir artifact
-        7z a artifact/ninja-mac-x86_64.zip ./build-x86_64/Release/ninja
+        7z a artifact/ninja-mac.zip ./build/Release/ninja
 
     # Upload ninja binary archives as an artifacts
     - name: Upload artifacts
@@ -78,18 +60,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./artifact/ninja-mac-arm64.zip
-        asset_name: ninja-mac-arm64.zip
+        asset_path: ./artifact/ninja-mac.zip
+        asset_name: ninja-mac.zip
         asset_content_type: application/zip
-        
-    
-    - name: Upload release asset (x86_64)
-      if: github.event.action == 'published'
-      uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./artifact/ninja-mac-x86_64.zip
-        asset_name: ninja-mac-x86_64.zip
-        asset_content_type: application/zip
+
