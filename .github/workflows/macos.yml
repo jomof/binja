@@ -15,9 +15,6 @@ jobs:
 
     - name: Install dependencies
       run: brew install re2c p7zip cmake
-      
-    - name: Install Protoc
-      uses: arduino/setup-protoc@v2
 
     - name: Build ninja
       shell: bash
