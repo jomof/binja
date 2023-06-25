@@ -14,19 +14,26 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Install dependencies
-      run: brew install re2c p7zip cmake
+      run: brew install re2c p7zip cmake sccache
+      
+    - name: Cache C/C++ Build Results
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.sccache
       
     - name: Generate Ninja
       shell: bash
       env:
         MACOSX_DEPLOYMENT_TARGET: 10.15
       run: |
-        cmake -Bbuild '-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64'
+        cmake -Bbuild '-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64' -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_C_COMPILER_LAUNCHER=sccache
 
     - name: Build ninja
       shell: bash
       env:
         MACOSX_DEPLOYMENT_TARGET: 10.15
+        SCCACHE_DIR: ~/.sccache
       run: |
         cmake --build build --config Release
 
