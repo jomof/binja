@@ -15,15 +15,33 @@ jobs:
 
     - name: Install dependencies
       run: brew install re2c p7zip cmake
-
-    - name: Build ninja
+      
+    - name: Generate Ninja (arm64)
       shell: bash
       env:
         MACOSX_DEPLOYMENT_TARGET: 10.15
       run: |
         cmake -Bbuild-arm64 '-DCMAKE_OSX_ARCHITECTURES=arm64'
+
+    - name: Generate Ninja (x86_64)
+      shell: bash
+      env:
+        MACOSX_DEPLOYMENT_TARGET: 10.15
+      run: |
         cmake -Bbuild-x86_64 '-DCMAKE_OSX_ARCHITECTURES=x86_64'
+
+    - name: Build ninja (arm64)
+      shell: bash
+      env:
+        MACOSX_DEPLOYMENT_TARGET: 10.15
+      run: |
         cmake --build build-arm64 --config Release
+        
+    - name: Build ninja (x86_64)
+      shell: bash
+      env:
+        MACOSX_DEPLOYMENT_TARGET: 10.15
+      run: |
         cmake --build build-x86_64 --config Release
 
     - name: Test ninja (arm64)
