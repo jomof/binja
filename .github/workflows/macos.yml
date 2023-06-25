@@ -33,12 +33,6 @@ jobs:
     - name: Test ninja
       run: ctest -C Release -vv
       working-directory: build
-
-    - name: Create ninja archive (arm64)
-      shell: bash
-      run: |
-        mkdir artifact
-        7z a artifact/ninja-mac-arm64.zip ./build-arm64/Release/ninja
     
     - name: Create ninja archive
       shell: bash
