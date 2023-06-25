@@ -1,0 +1,14 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : [],
+		"nodes" : []
+	},
+	"installers" : [],
+	"paths" : 
+	{
+		"build" : "vendor/google/protocolbuffers/protobuf-23.3/third_party/abseil-cpp/absl",
+		"source" : "vendor/google/absl/abseil-cpp-20230125.3/absl"
+	}
+}

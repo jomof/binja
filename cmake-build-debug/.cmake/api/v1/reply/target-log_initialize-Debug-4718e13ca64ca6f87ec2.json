@@ -1,0 +1,441 @@
+{
+	"archive" : {},
+	"artifacts" : 
+	[
+		{
+			"path" : "vendor/google/protocolbuffers/protobuf-23.3/third_party/abseil-cpp/absl/log/libabsl_log_initialize.a"
+		}
+	],
+	"backtrace" : 2,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_library",
+			"absl_cc_library",
+			"install",
+			"target_link_libraries",
+			"target_compile_options",
+			"add_definitions",
+			"include_directories",
+			"target_include_directories",
+			"target_compile_features",
+			"_absl_target_compile_features_if_available",
+			"target_sources"
+		],
+		"files" : 
+		[
+			"vendor/google/absl/abseil-cpp-20230125.3/CMake/AbseilHelpers.cmake",
+			"vendor/google/absl/abseil-cpp-20230125.3/absl/log/CMakeLists.txt",
+			"vendor/google/protocolbuffers/protobuf-23.3/CMakeLists.txt",
+			"vendor/google/absl/abseil-cpp-20230125.3/CMake/AbseilDll.cmake"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 1
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 507,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 251,
+				"parent" : 1
+			},
+			{
+				"command" : 2,
+				"file" : 0,
+				"line" : 348,
+				"parent" : 1
+			},
+			{
+				"command" : 3,
+				"file" : 0,
+				"line" : 253,
+				"parent" : 1
+			},
+			{
+				"command" : 4,
+				"file" : 0,
+				"line" : 275,
+				"parent" : 1
+			},
+			{
+				"file" : 2
+			},
+			{
+				"command" : 5,
+				"file" : 2,
+				"line" : 139,
+				"parent" : 6
+			},
+			{
+				"command" : 5,
+				"file" : 2,
+				"line" : 202,
+				"parent" : 6
+			},
+			{
+				"command" : 6,
+				"file" : 2,
+				"line" : 323,
+				"parent" : 6
+			},
+			{
+				"command" : 7,
+				"file" : 0,
+				"line" : 270,
+				"parent" : 1
+			},
+			{
+				"command" : 9,
+				"file" : 0,
+				"line" : 292,
+				"parent" : 1
+			},
+			{
+				"command" : 8,
+				"file" : 3,
+				"line" : 597,
+				"parent" : 11
+			},
+			{
+				"command" : 10,
+				"file" : 0,
+				"line" : 252,
+				"parent" : 1
+			}
+		]
+	},
+	"compileGroups" : 
+	[
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "-g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX13.3.sdk -fcolor-diagnostics"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-Wall"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-Wextra"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-Wcast-qual"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-Wconversion"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-Wfloat-overflow-conversion"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-Wfloat-zero-conversion"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-Wfor-loop-analysis"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-Wformat-security"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-Wgnu-redeclared-enum"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-Winfinite-recursion"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-Winvalid-constexpr"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-Wliteral-conversion"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-Wmissing-declarations"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-Woverlength-strings"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-Wpointer-arith"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-Wself-assign"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-Wshadow-all"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-Wshorten-64-to-32"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-Wsign-conversion"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-Wstring-conversion"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-Wtautological-overlap-compare"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-Wtautological-unsigned-zero-compare"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-Wundef"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-Wuninitialized"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-Wunreachable-code"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-Wunused-comparison"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-Wunused-local-typedefs"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-Wunused-result"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-Wvla"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-Wwrite-strings"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-Wno-float-conversion"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-Wno-implicit-float-conversion"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-Wno-implicit-int-float-conversion"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-Wno-unknown-warning-option"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-DNOMINMAX"
+				},
+				{
+					"fragment" : "-std=gnu++14"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 7,
+					"define" : "GOOGLE_PROTOBUF_CMAKE_BUILD"
+				},
+				{
+					"backtrace" : 8,
+					"define" : "HAVE_ZLIB"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 9,
+					"path" : "/Users/jomof/projects/binja/cmake-build-debug/vendor/google/protocolbuffers/protobuf-23.3"
+				},
+				{
+					"backtrace" : 9,
+					"path" : "/Users/jomof/projects/binja/vendor/google/protocolbuffers/protobuf-23.3/src"
+				},
+				{
+					"backtrace" : 10,
+					"path" : "/Users/jomof/projects/binja/vendor/google/absl/abseil-cpp-20230125.3"
+				}
+			],
+			"language" : "CXX",
+			"languageStandard" : 
+			{
+				"backtraces" : 
+				[
+					12
+				],
+				"standard" : "14"
+			},
+			"sourceIndexes" : 
+			[
+				0
+			]
+		}
+	],
+	"dependencies" : 
+	[
+		{
+			"backtrace" : 4,
+			"id" : "time::@81639d638287bac054fc"
+		},
+		{
+			"backtrace" : 4,
+			"id" : "civil_time::@81639d638287bac054fc"
+		},
+		{
+			"backtrace" : 4,
+			"id" : "time_zone::@81639d638287bac054fc"
+		},
+		{
+			"backtrace" : 4,
+			"id" : "bad_optional_access::@d538e378c980ae3c6822"
+		},
+		{
+			"backtrace" : 4,
+			"id" : "bad_variant_access::@d538e378c980ae3c6822"
+		},
+		{
+			"backtrace" : 4,
+			"id" : "log_severity::@80ce9754922a200ec89e"
+		},
+		{
+			"backtrace" : 4,
+			"id" : "raw_logging_internal::@80ce9754922a200ec89e"
+		},
+		{
+			"backtrace" : 4,
+			"id" : "spinlock_wait::@80ce9754922a200ec89e"
+		},
+		{
+			"backtrace" : 4,
+			"id" : "base::@80ce9754922a200ec89e"
+		},
+		{
+			"backtrace" : 4,
+			"id" : "throw_delegate::@80ce9754922a200ec89e"
+		},
+		{
+			"backtrace" : 4,
+			"id" : "hash::@8390b0cbf76956b13b2f"
+		},
+		{
+			"backtrace" : 4,
+			"id" : "city::@8390b0cbf76956b13b2f"
+		},
+		{
+			"backtrace" : 4,
+			"id" : "low_level_hash::@8390b0cbf76956b13b2f"
+		},
+		{
+			"backtrace" : 4,
+			"id" : "log_internal_globals::@38f96a287f6d823db583"
+		},
+		{
+			"backtrace" : 4,
+			"id" : "log_globals::@38f96a287f6d823db583"
+		},
+		{
+			"backtrace" : 4,
+			"id" : "int128::@2654b98585fe5e76f853"
+		},
+		{
+			"backtrace" : 4,
+			"id" : "strings::@7007414704b05594cc6d"
+		},
+		{
+			"backtrace" : 4,
+			"id" : "strings_internal::@7007414704b05594cc6d"
+		}
+	],
+	"folder" : 
+	{
+		"name" : "Abseil"
+	},
+	"id" : "log_initialize::@38f96a287f6d823db583",
+	"install" : 
+	{
+		"destinations" : 
+		[
+			{
+				"backtrace" : 3,
+				"path" : "lib"
+			}
+		],
+		"prefix" : 
+		{
+			"path" : "/usr/local"
+		}
+	},
+	"name" : "log_initialize",
+	"nameOnDisk" : "libabsl_log_initialize.a",
+	"paths" : 
+	{
+		"build" : "vendor/google/protocolbuffers/protobuf-23.3/third_party/abseil-cpp/absl/log",
+		"source" : "vendor/google/absl/abseil-cpp-20230125.3/absl/log"
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "Source Files",
+			"sourceIndexes" : 
+			[
+				0
+			]
+		},
+		{
+			"name" : "Header Files",
+			"sourceIndexes" : 
+			[
+				1
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 13,
+			"compileGroupIndex" : 0,
+			"path" : "vendor/google/absl/abseil-cpp-20230125.3/absl/log/initialize.cc",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 13,
+			"path" : "vendor/google/absl/abseil-cpp-20230125.3/absl/log/initialize.h",
+			"sourceGroupIndex" : 1
+		}
+	],
+	"type" : "STATIC_LIBRARY"
+}
