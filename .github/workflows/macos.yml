@@ -19,8 +19,8 @@ jobs:
     - name: Cache C/C++ Build Results
       uses: actions/cache@v3
       with:
-        path: |
-          ~/.sccache
+        path: ~/.sccache
+         key: ${{ runner.os }}-sccache
       
     - name: Generate Ninja
       shell: bash
