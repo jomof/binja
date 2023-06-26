@@ -15,11 +15,8 @@ jobs:
     - name: Install dependencies
       run: brew install re2c p7zip cmake sccache
       
-    - name: Cache C/C++ Build Results
-      uses: actions/cache@v3
-      with:
-        path: /Users/runner/Library/Caches/Mozilla.sccache
-        key: ${{ runner.os }}-sccache
+    - name: Run sccache-cache
+      uses: mozilla-actions/sccache-action@v0.0.3
         
     - name: Dump sccache stats (before)
       shell: bash
