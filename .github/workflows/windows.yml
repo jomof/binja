@@ -40,8 +40,6 @@ jobs:
         
     - name: Dump sccache stats (after)
       shell: bash
-      env:
-        SCCACHE_GHA_ENABLED: "true"
       run: sccache --show-stats
 
     - name: Test ninja (Debug)
