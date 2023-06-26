@@ -15,8 +15,11 @@ jobs:
     - name: Install dependencies
       run: brew install re2c p7zip cmake sccache
       
-    - name: Run sccache-cache
-      uses: mozilla-actions/sccache-action@v0.0.3
+    - name: Cache C/C++ Build Results
+      uses: actions/cache@v3
+      with:
+        path: /Users/runner/Library/Caches/Mozilla.sccache
+        key: ${{ runner.os }}-sccache
       
     - name: Generate Ninja
       shell: bash
