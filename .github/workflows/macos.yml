@@ -21,6 +21,11 @@ jobs:
       with:
         path: ~/.sccache
         key: ${{ runner.os }}-sccache
+        
+    - name: Dump sccache stats (before)
+      shell: bash
+      run: |
+        sccache --show-stats
       
     - name: Generate Ninja
       shell: bash
@@ -33,12 +38,12 @@ jobs:
       shell: bash
       env:
         MACOSX_DEPLOYMENT_TARGET: 10.15
-        SCCACHE_DIR: ~/.sccache
+        # SCCACHE_DIR: ~/.sccache
         SCCACHE_CACHE_MULTIARCH: 1
       run: |
         cmake --build build --config Release
         
-    - name: Dump sccache stats
+    - name: Dump sccache stats (after)
       shell: bash
       run: |
         sccache --show-stats
