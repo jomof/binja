@@ -27,8 +27,8 @@ jobs:
         rpm -U --quiet p7zip-16.02-20.el7.x86_64.rpm
         rpm -U --quiet p7zip-plugins-16.02-20.el7.x86_64.rpm
         #yum install -y make gcc-c++ libasan clang-analyzer 
-        yum install -y make libasan clang-analyzer
-        sudo apt install clang-12 --install-suggests
+        yum install -y make clang-12 libasan clang-analyzer
+        #sudo apt install clang-12 --install-suggests
 
     - name: Build debug ninja
       shell: bash
