@@ -27,12 +27,6 @@ jobs:
 
     - name: Run sccache-cache
       uses: mozilla-actions/sccache-action@v0.0.3
-      
-    - name: Cache C/C++ Build Results
-      uses: actions/cache@v3
-      with:
-        path: /xyz
-        key: ${{ runner.os }}-sccache
         
     - name: Dump sccache stats (before)
       shell: bash
