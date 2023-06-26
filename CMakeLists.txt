@@ -25,9 +25,11 @@ set(PROTOBUF_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/vendor/google/protocolbuffers/proto
 set(ABSL_INCLUDE_DIR ${ABSL_ROOT_DIR})
 
 if(WIN32)
-	set(PROTOBUF_PROTOC_EXECUTABLE vendor/google/protocolbuffers/protobuf-23.3/$<CONFIG>/protoc.exe)
+	set(PROTOBUF_PROTOC_EXECUTABLE ${CMAKE_SOURCE_DIR}/vendor/google/protocolbuffers/protoc-23.3-win64/bin/protoc.exe)
+elseif(APPLE)
+	set(PROTOBUF_PROTOC_EXECUTABLE ${CMAKE_SOURCE_DIR}/vendor/google/protocolbuffers/protoc-23.3-osx-universal_binary/bin/protoc)
 else()
-	set(PROTOBUF_PROTOC_EXECUTABLE vendor/google/protocolbuffers/protobuf-23.3/protoc)
+	set(PROTOBUF_PROTOC_EXECUTABLE ${CMAKE_SOURCE_DIR}/vendor/google/protocolbuffers/protoc-23.3-linux-x86_64/bin/protoc)
 endif()
 
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/proto-gen)
@@ -38,7 +40,7 @@ add_custom_command(
   ARGS -I ${CMAKE_SOURCE_DIR}/src
        --cpp_out proto-gen
        binja.proto
-  DEPENDS src/binja.proto ${PROTOBUF_PROTOC_EXECUTABLE}
+  DEPENDS src/binja.proto
   COMMENT "Running C++ protocol buffer compiler on binja.proto"
   VERBATIM)
 
