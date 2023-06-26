@@ -27,10 +27,11 @@ jobs:
         rpm -U --quiet p7zip-16.02-20.el7.x86_64.rpm
         rpm -U --quiet p7zip-plugins-16.02-20.el7.x86_64.rpm
         #yum install -y make gcc-c++ libasan clang-analyzer 
-        yum install -y centos-release-scl make llvm-toolset-7 libasan clang-analyzer
+        yum install -y centos-release-scl
+        yum-config-manager --enable rhel-server-rhscl-7-rpms
+        yum install -y make llvm-toolset-7 libasan clang-analyzer
         scl enable llvm-toolset-7 bash
         clang --version
-        #sudo apt install clang-12 --install-suggests
 
     - name: Build debug ninja
       shell: bash
