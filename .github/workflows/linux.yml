@@ -22,9 +22,12 @@ jobs:
     - name: Install dependencies
       run: |
         apt update
-        apt install -y python3-pip clang clang-tools p7zip-full sccache 
+        apt install -y python3-pip clang clang-tools p7zip-full
         pip3 install cmake==3.17.*
         clang --version
+        
+    - name: Run sccache-cache
+      uses: mozilla-actions/sccache-action@v0.0.3
         
     - name: Cache C/C++ Build Results
       uses: actions/cache@v3
