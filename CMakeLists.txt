@@ -25,9 +25,9 @@ set(PROTOBUF_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/vendor/google/protocolbuffers/proto
 set(ABSL_INCLUDE_DIR ${ABSL_ROOT_DIR})
 
 if(WIN32)
-	set(PROTOBUF_PROTOC_EXECUTABLE ${CMAKE_SOURCE_DIR}/vendor/google/protocolbuffers/protobuf-23.3/protoc.exe)
+	set(PROTOBUF_PROTOC_EXECUTABLE vendor/google/protocolbuffers/protobuf-23.3/protoc.exe)
 else()
-	set(PROTOBUF_PROTOC_EXECUTABLE ${CMAKE_SOURCE_DIR}/vendor/google/protocolbuffers/protobuf-23.3/protoc)
+	set(PROTOBUF_PROTOC_EXECUTABLE vendor/google/protocolbuffers/protobuf-23.3/protoc)
 endif()
 
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/proto-gen)
