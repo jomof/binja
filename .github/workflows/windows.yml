@@ -28,8 +28,8 @@ jobs:
     - name: Cache C/C++ Build Results
       uses: actions/cache@v3
       with:
-        path: /Users/runner/Library/Caches/Mozilla.sccache
-        key: ${{ runner.os }}-sccache
+        path: C:/Users/runneradmin/AppData/Local/Mozilla/sccache/cache"
+        key: ${{ runner.os }}-${{ runner.arch }}-sccache
         
     - name: Dump sccache stats (before)
       shell: bash
