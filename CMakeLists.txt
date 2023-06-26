@@ -14,63 +14,7 @@ if(POLICY CMP0135)
 endif()
 
 # --- protobuf
-#include(ExternalProject)
-#
-#set(PROTOBUF_VERSION "3.17.3")  # Replace with desired version
-#set(PROTOBUF_PREFIX "protobuf")
-#
-#ExternalProject_Add(protobuf-host
-#  PREFIX ${PROTOBUF_PREFIX}-host
-#  URL "https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOBUF_VERSION}/protobuf-cpp-${PROTOBUF_VERSION}.tar.gz"
-#  CONFIGURE_COMMAND ${CMAKE_COMMAND}
-#  	-G "${CMAKE_GENERATOR}"
-#	../protobuf-host/cmake
-#	-DCMAKE_POSITION_INDEPENDENT_CODE=ON
-#	-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-#	-Dprotobuf_BUILD_TESTS=OFF
-#  BUILD_COMMAND ${CMAKE_COMMAND} --build . --target protoc
-#  INSTALL_COMMAND ""
-#)
-#
-#ExternalProject_Add(protobuf-arm64
-#  PREFIX ${PROTOBUF_PREFIX}-arm64
-#  URL "https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOBUF_VERSION}/protobuf-cpp-${PROTOBUF_VERSION}.tar.gz"
-#  CONFIGURE_COMMAND ${CMAKE_COMMAND}
-#  	-G "${CMAKE_GENERATOR}"
-#	../protobuf-arm64/cmake
-#	-DCMAKE_POSITION_INDEPENDENT_CODE=ON
-#	-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-#	-Dprotobuf_BUILD_TESTS=OFF
-#	-DCMAKE_OSX_ARCHITECTURES=arm64
-#  BUILD_COMMAND ${CMAKE_COMMAND} --build .
-#  INSTALL_COMMAND ""
-#)
-#
-#ExternalProject_Add(protobuf-x86_64
-#  PREFIX ${PROTOBUF_PREFIX}-x86_64
-#  URL "https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOBUF_VERSION}/protobuf-cpp-${PROTOBUF_VERSION}.tar.gz"
-#  CONFIGURE_COMMAND ${CMAKE_COMMAND}
-#  	-G "${CMAKE_GENERATOR}"
-#	../protobuf-x86_64/cmake
-#	-DCMAKE_POSITION_INDEPENDENT_CODE=ON
-#	-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-#	-Dprotobuf_BUILD_TESTS=OFF
-#	-DCMAKE_OSX_ARCHITECTURES=x86_64
-#  BUILD_COMMAND ${CMAKE_COMMAND} --build .
-#)
-#
-#ExternalProject_Get_Property(protobuf-host source_dir binary_dir)
-#
-#set(PROTOBUF_INCLUDE_DIR ${source_dir}/src)
-#set(PROTOBUF_LIBRARY ${binary_dir}/${CMAKE_FIND_LIBRARY_PREFIXES}protobuf${CMAKE_STATIC_LIBRARY_SUFFIX})
-#set(PROTOBUF_PROTOC_EXECUTABLE ${binary_dir}/protoc)
-#
-#add_library(libprotobuf STATIC IMPORTED)
-#set_target_properties(libprotobuf PROPERTIES IMPORTED_LOCATION ${PROTOBUF_LIBRARY})
-#add_dependencies(libprotobuf protobuf-host)
-#
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/proto-gen)
-#protobuf-23.3/src
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(protobuf_BUILD_TESTS OFF)
@@ -78,17 +22,23 @@ set(ABSL_ROOT_DIR ${CMAKE_SOURCE_DIR}/vendor/google/absl/abseil-cpp-20230125.3)
 set(ABSL_PROPAGATE_CXX_STD ON)
 add_subdirectory(${CMAKE_SOURCE_DIR}/vendor/google/protocolbuffers/protobuf-23.3)
 
-set(PROTOBUF_PROTOC_EXECUTABLE ${CMAKE_SOURCE_DIR}/vendor/google/protocolbuffers/protoc-23.3-osx-universal_binary/bin/protoc)
 set(PROTOBUF_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/vendor/google/protocolbuffers/protobuf-23.3/src)
 set(ABSL_INCLUDE_DIR ${ABSL_ROOT_DIR})
+
+if(WIN32)
+	set(PROTOBUF_PROTOC_EXECUTABLE ${CMAKE_SOURCE_DIR}/vendor/google/protocolbuffers/protoc-23.3-osx-universal_binary/bin/protoc.exe)
+else()
+	set(PROTOBUF_PROTOC_EXECUTABLE ${CMAKE_SOURCE_DIR}/vendor/google/protocolbuffers/protoc-23.3-osx-universal_binary/bin/protoc)
+endif()
+
 add_custom_command(
   OUTPUT ${CMAKE_BINARY_DIR}/proto-gen/binja.pb.cc
          ${CMAKE_BINARY_DIR}/proto-gen/binja.pb.h
-  COMMAND vendor/google/protocolbuffers/protobuf-23.3/protoc
+  COMMAND ${PROTOBUF_PROTOC_EXECUTABLE}
   ARGS -I ${CMAKE_SOURCE_DIR}/src
        --cpp_out proto-gen
        binja.proto
-  DEPENDS src/binja.proto vendor/google/protocolbuffers/protobuf-23.3/protoc
+  DEPENDS src/binja.proto ${PROTOBUF_PROTOC_EXECUTABLE}
   COMMENT "Running C++ protocol buffer compiler on binja.proto"
   VERBATIM)
 
