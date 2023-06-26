@@ -86,15 +86,18 @@ jobs:
         apt update
         apt install -y python3-pytest ninja-build clang-tidy python3-pip clang
         pip3 install cmake==3.17.*
+        
+    - name: Run sccache-cache
+      uses: mozilla-actions/sccache-action@v0.0.3
 
     - name: Configure (GCC)
-      run: cmake -Bbuild-gcc -DCMAKE_BUILD_TYPE=Debug -G'Ninja Multi-Config'
+      run: cmake -Bbuild-gcc -DCMAKE_BUILD_TYPE=Debug -G'Ninja Multi-Config' -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_C_COMPILER_LAUNCHER=sccache
     - name: Build (GCC, Debug)
       run: cmake --build build-gcc --config Debug
     - name: Unit tests (GCC, Debug)
       run: ./build-gcc/Debug/ninja_test
     - name: Python tests (GCC, Debug)
-      run: pytest-3 --color=yes ../../src
+      run: pytest-3 --color=yes ../..
       working-directory: build-gcc/Debug
 
     - name: Build (GCC, Release)
@@ -102,18 +105,18 @@ jobs:
     - name: Unit tests (GCC, Release)
       run: ./build-gcc/Release/ninja_test
     - name: Python tests (GCC, Release)
-      run: pytest-3 --color=yes ../../src
+      run: pytest-3 --color=yes ../..
       working-directory: build-gcc/Release
 
     - name: Configure (Clang)
-      run: CC=clang CXX=clang++ cmake -Bbuild-clang -DCMAKE_BUILD_TYPE=Debug -G'Ninja Multi-Config' -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+      run: CC=clang CXX=clang++ cmake -Bbuild-clang -DCMAKE_BUILD_TYPE=Debug -G'Ninja Multi-Config' -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_C_COMPILER_LAUNCHER=sccache
 
     - name: Build (Clang, Debug)
       run: cmake --build build-clang --config Debug
     - name: Unit tests (Clang, Debug)
       run: ./build-clang/Debug/ninja_test
     - name: Python tests (Clang, Debug)
-      run: pytest-3 --color=yes ../../src
+      run: pytest-3 --color=yes ../..
       working-directory: build-clang/Debug
 
     - name: Build (Clang, Release)
@@ -121,7 +124,7 @@ jobs:
     - name: Unit tests (Clang, Release)
       run: ./build-clang/Release/ninja_test
     - name: Python tests (Clang, Release)
-      run: pytest-3 --color=yes ../../src
+      run: pytest-3 --color=yes ../..
       working-directory: build-clang/Release
 
     - name: clang-tidy
@@ -166,7 +169,7 @@ jobs:
           --volume "${PWD}:/ninja"
         install: |
           apt-get update -q -y
-          apt-get install -q -y make gcc g++ libasan5 clang-tools curl p7zip-full file
+          apt-get install -q -y make gcc g++ libasan5 clang-tools curl p7zip-full file sccache
         run: |
           set -x
           cd /ninja
