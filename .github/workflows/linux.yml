@@ -26,8 +26,15 @@ jobs:
         pip3 install cmake==3.17.*
         clang --version
         
-    - name: Run sccache-cache
-      uses: mozilla-actions/sccache-action@v0.0.3
+    - name: Cache C/C++ Build Results
+      uses: actions/cache@v3
+      with:
+        path: C:/Users/runneradmin/AppData/Local/Mozilla/sccache/cache"
+        key: ${{ runner.os }}-build-sccache
+    
+    - name: Dump sccache stats (before)
+      shell: bash
+      run: sccache --show-stats
 
     - name: Build debug ninja
       shell: bash
@@ -52,6 +59,10 @@ jobs:
     - name: Test release ninja
       run: ./ninja_test
       working-directory: release-build
+      
+    - name: Dump sccache stats (after)
+      shell: bash
+      run: sccache --show-stats
 
     - name: Create ninja archive
       run: |
