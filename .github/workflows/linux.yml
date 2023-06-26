@@ -170,7 +170,7 @@ jobs:
           --volume "${PWD}:/ninja"
         install: |
           apt-get update -q -y
-          apt-get install -q -y make gcc g++ libasan5 clang-tools curl p7zip-full file sccache
+          apt-get install -q -y make gcc g++ libasan5 clang-tools curl p7zip-full file
         run: |
           set -x
           cd /ninja
@@ -182,7 +182,7 @@ jobs:
           ./cmake-${CMAKE_VERSION}-Linux-aarch64.sh --skip-license --prefix=/usr/local
 
           # BUILD
-          cmake -DCMAKE_BUILD_TYPE=Release -B release-build -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_C_COMPILER_LAUNCHER=sccache
+          cmake -DCMAKE_BUILD_TYPE=Release -B release-build
           cmake --build release-build --parallel --config Release
           echo Done with Release build-----------------------
           strip release-build/ninja
