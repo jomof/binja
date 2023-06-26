@@ -24,16 +24,34 @@ jobs:
 
     - name: Install dependencies
       run: choco install re2c
+
+    - name: Run sccache-cache
+      uses: mozilla-actions/sccache-action@v0.0.3
       
-    - name: Install Protoc
-      uses: arduino/setup-protoc@v2
+    - name: Cache C/C++ Build Results
+      uses: actions/cache@v3
+      with:
+        path: /xyz
+        key: ${{ runner.os }}-sccache
+        
+    - name: Dump sccache stats (before)
+      shell: bash
+      env:
+        SCCACHE_GHA_ENABLED: "true"
+      run: sccache --show-stats
 
     - name: Build ninja
       shell: bash
       run: |
-        cmake -Bbuild -A ${{ matrix.arch }}
+        cmake -Bbuild -A ${{ matrix.arch }} -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_C_COMPILER_LAUNCHER=sccache
         cmake --build build --parallel --config Debug
         cmake --build build --parallel --config Release
+        
+    - name: Dump sccache stats (after)
+      shell: bash
+      env:
+        SCCACHE_GHA_ENABLED: "true"
+      run: sccache --show-stats
 
     - name: Test ninja (Debug)
       if: matrix.arch != 'arm64'
