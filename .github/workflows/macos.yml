@@ -24,8 +24,9 @@ jobs:
         
     - name: Dump sccache stats (before)
       shell: bash
-      run: |
-        sccache --show-stats
+      env:
+        SCCACHE_CACHE_MULTIARCH: 1
+      run: sccache --show-stats
       
     - name: Generate Ninja
       shell: bash
@@ -44,8 +45,9 @@ jobs:
         
     - name: Dump sccache stats (after)
       shell: bash
-      run: |
-        sccache --show-stats
+      env:
+        SCCACHE_CACHE_MULTIARCH: 1
+      run: sccache --show-stats
 
     - name: Test ninja
       run: ctest -C Release -vv
