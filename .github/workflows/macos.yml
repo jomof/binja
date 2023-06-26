@@ -17,12 +17,6 @@ jobs:
       
     - name: Run sccache-cache
       uses: mozilla-actions/sccache-action@v0.0.3
-        
-    - name: Dump sccache stats (before)
-      shell: bash
-      env:
-        SCCACHE_CACHE_MULTIARCH: 1
-      run: sccache --show-stats
       
     - name: Generate Ninja
       shell: bash
