@@ -19,7 +19,7 @@ jobs:
     - name: Cache C/C++ Build Results
       uses: actions/cache@v3
       with:
-        path: ~/.sccache
+        path: /Users/runner/Library/Caches/Mozilla.sccache
         key: ${{ runner.os }}-sccache
         
     - name: Dump sccache stats (before)
@@ -38,7 +38,6 @@ jobs:
       shell: bash
       env:
         MACOSX_DEPLOYMENT_TARGET: 10.15
-        # SCCACHE_DIR: ~/.sccache
         SCCACHE_CACHE_MULTIARCH: 1
       run: |
         cmake --build build --config Release
