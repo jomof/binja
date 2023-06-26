@@ -32,7 +32,7 @@ jobs:
     - name: Cache C/C++ Build Results
       uses: actions/cache@v3
       with:
-        path: C:/Users/runneradmin/AppData/Local/Mozilla/sccache/cache"
+        path: /github/home/.cache/sccache
         key: ${{ runner.os }}-build-sccache
     
     - name: Dump sccache stats (before)
