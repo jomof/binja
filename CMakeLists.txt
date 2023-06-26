@@ -14,7 +14,11 @@ if(POLICY CMP0135)
 endif()
 
 # --- protobuf
+<<<<<<< HEAD
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/proto-gen)
+=======
+
+>>>>>>> e63b99d (Add .exe to protoc for windows)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(protobuf_BUILD_TESTS OFF)
@@ -26,11 +30,13 @@ set(PROTOBUF_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/vendor/google/protocolbuffers/proto
 set(ABSL_INCLUDE_DIR ${ABSL_ROOT_DIR})
 
 if(WIN32)
-	set(PROTOBUF_PROTOC_EXECUTABLE ${CMAKE_SOURCE_DIR}/vendor/google/protocolbuffers/protoc-23.3-osx-universal_binary/bin/protoc.exe)
+	set(PROTOBUF_PROTOC_EXECUTABLE ${CMAKE_SOURCE_DIR}/vendor/google/protocolbuffers/protobuf-23.3/protoc.exe)
 else()
-	set(PROTOBUF_PROTOC_EXECUTABLE ${CMAKE_SOURCE_DIR}/vendor/google/protocolbuffers/protoc-23.3-osx-universal_binary/bin/protoc)
+	set(PROTOBUF_PROTOC_EXECUTABLE ${CMAKE_SOURCE_DIR}/vendor/google/protocolbuffers/protobuf-23.3/protoc)
 endif()
 
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/proto-gen)
+>>>>>>> e63b99d (Add .exe to protoc for windows)
 add_custom_command(
   OUTPUT ${CMAKE_BINARY_DIR}/proto-gen/binja.pb.cc
          ${CMAKE_BINARY_DIR}/proto-gen/binja.pb.h
