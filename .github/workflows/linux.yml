@@ -208,10 +208,11 @@ jobs:
           # INSTALL SCCACHE
           wget https://github.com/mozilla/sccache/releases/download/v0.5.3/sccache-v0.5.3-aarch64-unknown-linux-musl.tar.gz
           tar -xzvf sccache-v0.5.3-aarch64-unknown-linux-musl.tar.gz
+          ls
 
           # BUILD
           cmake -DCMAKE_BUILD_TYPE=Release -B release-build
-          cmake --build release-build --parallel --config Release
+          cmake --build release-build --parallel --config Release --target ninja --target ninja_test
           echo Done with Release build-----------------------
           strip release-build/ninja
           echo Done with Release strip-----------------------
