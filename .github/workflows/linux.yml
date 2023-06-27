@@ -205,7 +205,7 @@ jobs:
 
           # BUILD
           cmake -DCMAKE_BUILD_TYPE=Release -B release-build
-          cmake --build . --target help
+          cmake --build release-build --target help
           cmake --build release-build --parallel --config Release --target libprotobuf
           cmake --build release-build --parallel --config Release --target ninja
           cmake --build release-build --parallel --config Release --target ninja_test
