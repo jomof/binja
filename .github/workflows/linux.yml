@@ -196,17 +196,17 @@ jobs:
         run: |
           set -x
           cd /ninja
+          
+          # INSTALL SCCACHE
+          curl -L -O https://github.com/mozilla/sccache/releases/download/v0.5.3/sccache-v0.5.3-aarch64-unknown-linux-musl.tar.gz
+          tar -xzvf sccache-v0.5.3-aarch64-unknown-linux-musl.tar.gz
+          ls
 
           # INSTALL CMAKE
           CMAKE_VERSION=3.23.4
           curl -L -O https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-Linux-aarch64.sh
           chmod +x cmake-${CMAKE_VERSION}-Linux-aarch64.sh
           ./cmake-${CMAKE_VERSION}-Linux-aarch64.sh --skip-license --prefix=/usr/local
-          
-          # INSTALL SCCACHE
-          wget https://github.com/mozilla/sccache/releases/download/v0.5.3/sccache-v0.5.3-aarch64-unknown-linux-musl.tar.gz
-          tar -xzvf sccache-v0.5.3-aarch64-unknown-linux-musl.tar.gz
-          ls
 
           # BUILD
           cmake -DCMAKE_BUILD_TYPE=Release -B release-build
