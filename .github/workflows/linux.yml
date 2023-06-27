@@ -182,8 +182,6 @@ jobs:
     runs-on: [ubuntu-latest]
     steps:
     - uses: actions/checkout@v3
-    - name: Run sccache-cache
-      uses: mozilla-actions/sccache-action@v0.0.3
     - name: Build
       uses: uraimo/run-on-arch-action@v2
       with:
