@@ -196,11 +196,6 @@ jobs:
         run: |
           set -x
           cd /ninja
-          
-          # INSTALL SCCACHE
-          curl -L -O https://github.com/mozilla/sccache/releases/download/v0.5.3/sccache-v0.5.3-aarch64-unknown-linux-musl.tar.gz
-          tar -xzvf sccache-v0.5.3-aarch64-unknown-linux-musl.tar.gz
-          ${PWD)/sccache-v0.5.3-aarch64-unknown-linux-musl/sccache --version
 
           # INSTALL CMAKE
           CMAKE_VERSION=3.23.4
@@ -210,7 +205,9 @@ jobs:
 
           # BUILD
           cmake -DCMAKE_BUILD_TYPE=Release -B release-build
-          cmake --build release-build --parallel --config Release --target ninja --target ninja_test
+          cmake --build release-build --parallel --config Release --target protobuf
+          cmake --build release-build --parallel --config Release --target ninja
+          cmake --build release-build --parallel --config Release --target ninja_test
           echo Done with Release build-----------------------
           strip release-build/ninja
           echo Done with Release strip-----------------------
