@@ -194,7 +194,7 @@ jobs:
           --volume "${PWD}:/ninja"
         install: |
           apt-get update -q -y
-          apt-get install -q -y make gcc g++ libasan5 clang-tools curl p7zip-full file
+          apt-get install -q -y make gcc g++ libasan5 clang-tools curl p7zip-full file sccache
         run: |
           set -x
           cd /ninja
