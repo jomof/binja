@@ -154,7 +154,7 @@ jobs:
 
     - name: clang-tidy
       run: /usr/lib/llvm-10/share/clang/run-clang-tidy.py -header-filter=src
-      working-directory: src
+      working-directory: build-clang
 
   build-with-python:
     runs-on: [ubuntu-latest]
