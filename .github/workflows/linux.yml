@@ -104,6 +104,16 @@ jobs:
         
     - name: Run sccache-cache
       uses: mozilla-actions/sccache-action@v0.0.3
+        
+    - name: Cache C/C++ Build Results
+      uses: actions/cache@v3
+      with:
+        path: /github/home/.cache/sccache
+        key: ${{ runner.os }}-test-sccache
+    
+    - name: Dump sccache stats (before)
+      shell: bash
+      run: sccache --show-stats
 
     - name: Configure (GCC)
       run: cmake -Bbuild-gcc -DCMAKE_BUILD_TYPE=Debug -G'Ninja Multi-Config' -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_C_COMPILER_LAUNCHER=sccache
