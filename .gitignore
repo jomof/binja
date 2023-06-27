@@ -3,6 +3,8 @@
 *.exe
 *.pdb
 *.ilk
+/cmake-build*/
+/.idea/
 /build*/
 /build.ninja
 /ninja
