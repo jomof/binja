@@ -107,7 +107,7 @@ jobs:
       working-directory: build-gcc/Release
 
     - name: Configure (Clang)
-      run: CC=clang CXX=clang++ cmake -Bbuild-clang -G'Ninja Multi-Config' -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DNINJA_USE_PREBUILT_FLATC=ON
+      run: CC=clang CXX=clang++ cmake -Bbuild-clang -G'Ninja Multi-Config' -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DNINJA_USE_PREBUILT_FLATC=ON -DNINJA_NO_FLATC_BUILD=ON
 
     - name: Build (Clang, Debug)
       run: cmake --build build-clang --config Debug
