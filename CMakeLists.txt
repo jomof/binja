@@ -39,7 +39,7 @@ else()
 	endif()
 
 	set(FLATC_BUILD_DEP flatc)
-	set(FLATBUFFERS_INSTALL OFF)
+	set(FLATBUFFERS_INSTALL ON)
 	set(FLATBUFFERS_BUILD_TESTS OFF)
 
 	add_subdirectory(${CMAKE_SOURCE_DIR}/vendor/google/flatbuffers/flatbuffers-23.5.26/src)
