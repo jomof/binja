@@ -22,6 +22,8 @@
 #include "state.h"
 #include "util.h"
 #include "version.h"
+#include "flatbuffers/flatbuffer_builder.h"
+#include "binja_generated.h"
 
 using namespace std;
 
@@ -34,6 +36,12 @@ ManifestParser::ManifestParser(State* state, FileReader* file_reader,
 
 bool ManifestParser::Parse(const string& filename, const string& input,
                            string* err) {
+
+  flatbuffers::FlatBufferBuilder builder;
+  auto name = builder.CreateSharedString("bob");
+  auto person = binja::CreatePerson(builder, name);
+  builder.Finish(person);
+
   lexer_.Start(filename, input);
 
   for (;;) {

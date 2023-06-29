@@ -13,35 +13,28 @@ if(POLICY CMP0135)
   cmake_policy(SET CMP0135 NEW)
 endif()
 
-# --- protobuf
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(protobuf_BUILD_TESTS OFF)
-set(ABSL_ROOT_DIR ${CMAKE_SOURCE_DIR}/vendor/google/absl/abseil-cpp-20230125.3)
-set(ABSL_PROPAGATE_CXX_STD ON)
-add_subdirectory(${CMAKE_SOURCE_DIR}/vendor/google/protocolbuffers/protobuf-23.3)
-
-set(PROTOBUF_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/vendor/google/protocolbuffers/protobuf-23.3/src)
-set(ABSL_INCLUDE_DIR ${ABSL_ROOT_DIR})
+# --- flatc
+set(FLATBUFFERS_INSTALL OFF)
+set(FLATBUFFERS_BUILD_TESTS OFF)
+add_subdirectory(${CMAKE_SOURCE_DIR}/vendor/google/flatbuffers/flatbuffers-23.5.26/src)
 
 if(WIN32)
-	set(PROTOBUF_PROTOC_EXECUTABLE ${CMAKE_SOURCE_DIR}/vendor/google/protocolbuffers/protoc-23.3-win64/bin/protoc.exe)
-elseif(APPLE)
-	set(PROTOBUF_PROTOC_EXECUTABLE ${CMAKE_SOURCE_DIR}/vendor/google/protocolbuffers/protoc-23.3-osx-universal_binary/bin/protoc)
+	set(FLATC_EXECUTABLE ${CMAKE_BINARY_DIR}/vendor/google/flatbuffers/flatbuffers-23.5.26/src/flatc.exe)
 else()
-	set(PROTOBUF_PROTOC_EXECUTABLE ${CMAKE_SOURCE_DIR}/vendor/google/protocolbuffers/protoc-23.3-linux-x86_64/bin/protoc)
+	set(FLATC_EXECUTABLE ${CMAKE_BINARY_DIR}/vendor/google/flatbuffers/flatbuffers-23.5.26/src/flatc)
 endif()
+set(FLATC_INCLUDE_FOLDER ${CMAKE_SOURCE_DIR}/vendor/google/flatbuffers/flatbuffers-23.5.26/src/include)
+set(FLATC_SCHEMA_FBS ${CMAKE_SOURCE_DIR}/src/binja.proto)
+set(FLATC_GENERATED_FOLDER ${CMAKE_BINARY_DIR}/flatc/include)
+set(FLATC_HEADER ${FLATC_GENERATED_FOLDER}/binja_generated.h)
 
-file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/proto-gen)
+file(MAKE_DIRECTORY ${FLATC_GENERATED_FOLDER})
 add_custom_command(
-  OUTPUT ${CMAKE_BINARY_DIR}/proto-gen/binja.pb.cc
-         ${CMAKE_BINARY_DIR}/proto-gen/binja.pb.h
-  COMMAND ${PROTOBUF_PROTOC_EXECUTABLE}
-  ARGS -I ${CMAKE_SOURCE_DIR}/src
-       --cpp_out proto-gen
-       binja.proto
-  DEPENDS src/binja.proto
-  COMMENT "Running C++ protocol buffer compiler on binja.proto"
+  OUTPUT ${FLATC_HEADER}
+  COMMAND ${FLATC_EXECUTABLE}
+  ARGS --proto -o ${FLATC_GENERATED_FOLDER} -c ${FLATC_SCHEMA_FBS}
+  DEPENDS ${FLATC_SCHEMA_FBS} ${FLATC_EXECUTABLE}
+  COMMENT "Running flatc on ${FLATC_SCHEMA_FBS}"
   VERBATIM)
 
 # --- optional link-time optimization
@@ -149,9 +142,10 @@ set(NINJA_PYTHON "python" CACHE STRING "Python interpreter to use for the browse
 
 check_platform_supports_browse_mode(platform_supports_ninja_browse)
 
+
 # Core source files all build into ninja library.
 add_library(libninja OBJECT
-    ${CMAKE_BINARY_DIR}/proto-gen/binja.pb.cc
+    ${FLATC_HEADER}
 	src/build_log.cc
 	src/build.cc
 	src/clean.cc
@@ -177,10 +171,7 @@ add_library(libninja OBJECT
 	src/util.cc
 	src/version.cc
 )
-target_include_directories(libninja PRIVATE
-	${CMAKE_BINARY_DIR}/proto-gen
-	${PROTOBUF_INCLUDE_DIR}
-	${ABSL_INCLUDE_DIR})
+target_include_directories(libninja PRIVATE ${FLATC_INCLUDE_FOLDER} ${FLATC_GENERATED_FOLDER})
 
 if(WIN32)
 	target_sources(libninja PRIVATE
@@ -227,7 +218,7 @@ endif()
 # Main executable is library plus main() function.
 if(NINJA_BUILD_BINARY)
 	add_executable(ninja src/ninja.cc)
-	target_link_libraries(ninja PRIVATE libninja libninja-re2c libprotobuf)
+	target_link_libraries(ninja PRIVATE libninja libninja-re2c)
 
 	if(WIN32)
 		target_sources(ninja PRIVATE windows/ninja.manifest)
@@ -290,7 +281,7 @@ if(BUILD_TESTING)
   if(WIN32)
     target_sources(ninja_test PRIVATE src/includes_normalize_test.cc src/msvc_helper_test.cc)
   endif()
-  target_link_libraries(ninja_test PRIVATE libninja libninja-re2c libprotobuf)
+  target_link_libraries(ninja_test PRIVATE libninja libninja-re2c)
 
   foreach(perftest
     build_log_perftest
@@ -301,7 +292,7 @@ if(BUILD_TESTING)
     manifest_parser_perftest
   )
     add_executable(${perftest} src/${perftest}.cc)
-    target_link_libraries(${perftest} PRIVATE libninja libninja-re2c libprotobuf)
+    target_link_libraries(${perftest} PRIVATE libninja libninja-re2c)
   endforeach()
 
   if(CMAKE_SYSTEM_NAME STREQUAL "AIX" AND CMAKE_SIZEOF_VOID_P EQUAL 4)
