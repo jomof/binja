@@ -19,7 +19,7 @@ set(FLATBUFFERS_BUILD_TESTS OFF)
 add_subdirectory(${CMAKE_SOURCE_DIR}/vendor/google/flatbuffers/flatbuffers-23.5.26/src)
 
 if(WIN32)
-	set(FLATC_EXECUTABLE ${CMAKE_BINARY_DIR}/vendor/google/flatbuffers/flatbuffers-23.5.26/src/flatc.exe)
+	set(FLATC_EXECUTABLE ${CMAKE_BINARY_DIR}/vendor/google/flatbuffers/flatbuffers-23.5.26/src/$<CONFIG>/flatc.exe)
 else()
 	set(FLATC_EXECUTABLE ${CMAKE_BINARY_DIR}/vendor/google/flatbuffers/flatbuffers-23.5.26/src/flatc)
 endif()
@@ -30,12 +30,12 @@ set(FLATC_HEADER ${FLATC_GENERATED_FOLDER}/binja_generated.h)
 
 file(MAKE_DIRECTORY ${FLATC_GENERATED_FOLDER})
 add_custom_command(
-  OUTPUT ${FLATC_HEADER}
-  COMMAND ${FLATC_EXECUTABLE}
-  ARGS --proto -o ${FLATC_GENERATED_FOLDER} -c ${FLATC_SCHEMA_FBS}
-  DEPENDS ${FLATC_SCHEMA_FBS} ${FLATC_EXECUTABLE}
-  COMMENT "Running flatc on ${FLATC_SCHEMA_FBS}"
-  VERBATIM)
+		OUTPUT ${FLATC_HEADER}
+		COMMAND ${FLATC_EXECUTABLE}
+		ARGS --proto -o ${FLATC_GENERATED_FOLDER} -c ${FLATC_SCHEMA_FBS}
+		DEPENDS ${FLATC_SCHEMA_FBS} flatc
+		COMMENT "Running flatc on ${FLATC_SCHEMA_FBS}"
+		VERBATIM)
 
 # --- optional link-time optimization
 check_ipo_supported(RESULT lto_supported OUTPUT error)
