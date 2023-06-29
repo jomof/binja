@@ -315,6 +315,7 @@ def search_system_path(file_name):
 if platform.is_msvc():
     if not search_system_path('cl.exe'):
         raise Exception('cl.exe not found. Run again from the Developer Command Prompt for VS')
+    flatc = './vendor/google/flatbuffers/flatbuffers-23.5.26/bin/windows/flatc.exe'
     cflags = ['/showIncludes',
               '/nologo',  # Don't print startup banner.
               '/Zi',  # Create pdb with debug info.
@@ -343,6 +344,7 @@ if platform.is_msvc():
         cflags += ['/Ox', '/DNDEBUG', '/GL']
         ldflags += ['/LTCG', '/OPT:REF', '/OPT:ICF']
 else:
+    flatc = './vendor/google/flatbuffers/flatbuffers-23.5.26/bin/linux/flatc'
     cflags = ['-g', '-Wall', '-Wextra',
               '-Wno-deprecated',
               '-Wno-missing-field-initializers',
@@ -401,6 +403,14 @@ if platform.supports_ppoll() and not options.force_pselect:
     cflags.append('-DUSE_PPOLL')
 if platform.supports_ninja_browse():
     cflags.append('-DNINJA_HAVE_BROWSE')
+
+# Generate flatbuffer header
+flatc_proc = subprocess.Popen([flatc, '--proto', '-o', 'build/flatc','-c', 'src/binja.proto'])
+flatc_proc.wait()
+
+# Flatbuffer headers
+cflags.append('-I./vendor/google/flatbuffers/flatbuffers-23.5.26/src/include')
+cflags.append('-I./build/flatc')
 
 # Search for generated headers relative to build dir.
 cflags.append('-I.')
