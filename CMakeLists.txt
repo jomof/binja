@@ -6,6 +6,7 @@ include(ExternalProject)
 
 option(NINJA_BUILD_BINARY "Build ninja binary" ON)
 option(NINJA_FORCE_PSELECT "Use pselect() even on platforms that provide ppoll()" OFF)
+option(NINJA_USE_PREBUILT_FLATC "Use the local prebuilt flatc.exe" OFF)
 
 project(ninja CXX)
 
@@ -18,11 +19,23 @@ set(FLATBUFFERS_INSTALL OFF)
 set(FLATBUFFERS_BUILD_TESTS OFF)
 add_subdirectory(${CMAKE_SOURCE_DIR}/vendor/google/flatbuffers/flatbuffers-23.5.26/src)
 
-if(WIN32)
-	set(FLATC_EXECUTABLE ${CMAKE_BINARY_DIR}/vendor/google/flatbuffers/flatbuffers-23.5.26/src/$<CONFIG>/flatc.exe)
+if(NINJA_USE_PREBUILT_FLATC)
+	if(WIN32)
+		set(FLATC_EXECUTABLE ${CMAKE_SOURCE_DIR}/vendor/google/flatbuffers/flatbuffers-23.5.26/bin/windows/flatc.exe)
+	elseif(APPLE)
+		set(FLATC_EXECUTABLE ${CMAKE_SOURCE_DIR}/vendor/google/flatbuffers/flatbuffers-23.5.26/bin/darwin/flatc)
+	else()
+		set(FLATC_EXECUTABLE ${CMAKE_SOURCE_DIR}/vendor/google/flatbuffers/flatbuffers-23.5.26/bin/linux/flatc)
+	endif()
 else()
-	set(FLATC_EXECUTABLE ${CMAKE_BINARY_DIR}/vendor/google/flatbuffers/flatbuffers-23.5.26/src/flatc)
+	set(FLATC_BUILD_DEP flatc)
+	if(WIN32)
+		set(FLATC_EXECUTABLE ${CMAKE_BINARY_DIR}/vendor/google/flatbuffers/flatbuffers-23.5.26/src/$<CONFIG>/flatc.exe)
+	else()
+		set(FLATC_EXECUTABLE ${CMAKE_BINARY_DIR}/vendor/google/flatbuffers/flatbuffers-23.5.26/src/flatc)
+	endif()
 endif()
+
 set(FLATC_INCLUDE_FOLDER ${CMAKE_SOURCE_DIR}/vendor/google/flatbuffers/flatbuffers-23.5.26/src/include)
 set(FLATC_SCHEMA_FBS ${CMAKE_SOURCE_DIR}/src/binja.proto)
 set(FLATC_GENERATED_FOLDER ${CMAKE_BINARY_DIR}/flatc/include)
@@ -33,7 +46,7 @@ add_custom_command(
 		OUTPUT ${FLATC_HEADER}
 		COMMAND ${FLATC_EXECUTABLE}
 		ARGS --proto -o ${FLATC_GENERATED_FOLDER} -c ${FLATC_SCHEMA_FBS}
-		DEPENDS ${FLATC_SCHEMA_FBS} flatc
+		DEPENDS ${FLATC_SCHEMA_FBS} ${FLATC_BUILD_DEP}
 		COMMENT "Running flatc on ${FLATC_SCHEMA_FBS}"
 		VERBATIM)
 
