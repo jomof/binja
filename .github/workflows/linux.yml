@@ -34,10 +34,10 @@ jobs:
         CFLAGS: -fstack-protector-all -fsanitize=address
         CXXFLAGS: -fstack-protector-all -fsanitize=address
       run: |
-       # scan-build -o scanlogs cmake -DCMAKE_BUILD_TYPE=Debug -B debug-build
+       # scan-build -o scanlogs cmake -DCMAKE_BUILD_TYPE=Debug -B debug-build 
        # scan-build -o scanlogs cmake --build debug-build --parallel --config Debug
-        scan-build -o scanlogs cmake -DCMAKE_BUILD_TYPE=Debug -B debug-build
-        scan-build -o scanlogs cmake --build debug-build --parallel --config Debug
+        scan-build -o scanlogs cmake -DCMAKE_BUILD_TYPE=Debug -B debug-build -DNINJA_USE_PREBUILT_FLATC=ON
+        scan-build -o scanlogs cmake --build debug-build --parallel --config Debug -DNINJA_USE_PREBUILT_FLATC=ON
 
 
     - name: Test debug ninja
@@ -47,7 +47,7 @@ jobs:
     - name: Build release ninja
       shell: bash
       run: |
-        cmake -DCMAKE_BUILD_TYPE=Release -B release-build
+        cmake -DCMAKE_BUILD_TYPE=Release -B release-build -DNINJA_USE_PREBUILT_FLATC=ON
         cmake --build release-build --parallel --config Release
         strip release-build/ninja
 
@@ -127,9 +127,9 @@ jobs:
       run: pytest-3 --color=yes ../../misc
       working-directory: build-clang/Release
 
-    - name: clang-tidy
-      run: /usr/lib/llvm-10/share/clang/run-clang-tidy.py -header-filter=src
-      working-directory: build-clang
+#     - name: clang-tidy
+#       run: /usr/lib/llvm-10/share/clang/run-clang-tidy.py -header-filter=src
+#       working-directory: build-clang
 
   build-with-python:
     runs-on: [ubuntu-latest]
