@@ -10,34 +10,22 @@ jobs:
   build:
     runs-on: [ubuntu-latest]
     container:
-      image: ubuntu:20.04
-    #container:
-    #  image: centos:7
+      image: centos:7
     steps:
     - uses: actions/checkout@v2
     - uses: codespell-project/actions-codespell@master
       with:
         ignore_words_list: fo,wee
-        skip: vendor
     - name: Install dependencies
       run: |
-        apt update
-        apt install -y python3-pip clang clang-tools p7zip-full
-        pip3 install cmake==3.17.*
-        clang --version
-        
-    - name: Run sccache-cache
-      uses: mozilla-actions/sccache-action@v0.0.3
-        
-    - name: Cache C/C++ Build Results
-      uses: actions/cache@v3
-      with:
-        path: /github/home/.cache/sccache
-        key: ${{ runner.os }}-build-sccache
-    
-    - name: Dump sccache stats (before)
-      shell: bash
-      run: sccache --show-stats
+        curl -L -O https://github.com/Kitware/CMake/releases/download/v3.16.4/cmake-3.16.4-Linux-x86_64.sh
+        chmod +x cmake-3.16.4-Linux-x86_64.sh
+        ./cmake-3.16.4-Linux-x86_64.sh --skip-license --prefix=/usr/local
+        curl -L -O https://www.mirrorservice.org/sites/dl.fedoraproject.org/pub/epel/7/x86_64/Packages/p/p7zip-16.02-20.el7.x86_64.rpm
+        curl -L -O https://www.mirrorservice.org/sites/dl.fedoraproject.org/pub/epel/7/x86_64/Packages/p/p7zip-plugins-16.02-20.el7.x86_64.rpm
+        rpm -U --quiet p7zip-16.02-20.el7.x86_64.rpm
+        rpm -U --quiet p7zip-plugins-16.02-20.el7.x86_64.rpm
+        yum install -y make gcc-c++ libasan clang-analyzer
 
     - name: Build debug ninja
       shell: bash
@@ -45,27 +33,23 @@ jobs:
         CFLAGS: -fstack-protector-all -fsanitize=address
         CXXFLAGS: -fstack-protector-all -fsanitize=address
       run: |
-        scan-build -o scanlogs cmake -DCMAKE_BUILD_TYPE=Debug -B debug-build -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_C_COMPILER_LAUNCHER=sccache
+        scan-build -o scanlogs cmake -DCMAKE_BUILD_TYPE=Debug -B debug-build
         scan-build -o scanlogs cmake --build debug-build --parallel --config Debug
 
-    #- name: Test debug ninja
-    #  run: ./ninja_test
-    #  working-directory: debug-build
+    - name: Test debug ninja
+      run: ./ninja_test
+      working-directory: debug-build
 
     - name: Build release ninja
       shell: bash
       run: |
-        cmake -DCMAKE_BUILD_TYPE=Release -B release-build -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_C_COMPILER_LAUNCHER=sccache
+        cmake -DCMAKE_BUILD_TYPE=Release -B release-build
         cmake --build release-build --parallel --config Release
         strip release-build/ninja
 
     - name: Test release ninja
       run: ./ninja_test
       working-directory: release-build
-      
-    - name: Dump sccache stats (after)
-      shell: bash
-      run: sccache --show-stats
 
     - name: Create ninja archive
       run: |
@@ -101,28 +85,15 @@ jobs:
         apt update
         apt install -y python3-pytest ninja-build clang-tidy python3-pip clang
         pip3 install cmake==3.17.*
-        
-    - name: Run sccache-cache
-      uses: mozilla-actions/sccache-action@v0.0.3
-        
-    - name: Cache C/C++ Build Results
-      uses: actions/cache@v3
-      with:
-        path: /github/home/.cache/sccache
-        key: ${{ runner.os }}-test-sccache
-    
-    - name: Dump sccache stats (before)
-      shell: bash
-      run: sccache --show-stats
-
     - name: Configure (GCC)
-      run: cmake -Bbuild-gcc -DCMAKE_BUILD_TYPE=Debug -G'Ninja Multi-Config' -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_C_COMPILER_LAUNCHER=sccache
+      run: cmake -Bbuild-gcc -DCMAKE_BUILD_TYPE=Debug -G'Ninja Multi-Config'
+
     - name: Build (GCC, Debug)
       run: cmake --build build-gcc --config Debug
     - name: Unit tests (GCC, Debug)
       run: ./build-gcc/Debug/ninja_test
     - name: Python tests (GCC, Debug)
-      run: pytest-3 --color=yes ../../misc
+      run: pytest-3 --color=yes ../..
       working-directory: build-gcc/Debug
 
     - name: Build (GCC, Release)
@@ -130,18 +101,18 @@ jobs:
     - name: Unit tests (GCC, Release)
       run: ./build-gcc/Release/ninja_test
     - name: Python tests (GCC, Release)
-      run: pytest-3 --color=yes ../../misc
+      run: pytest-3 --color=yes ../..
       working-directory: build-gcc/Release
 
     - name: Configure (Clang)
-      run: CC=clang CXX=clang++ cmake -Bbuild-clang -DCMAKE_BUILD_TYPE=Debug -G'Ninja Multi-Config' -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_C_COMPILER_LAUNCHER=sccache
+      run: CC=clang CXX=clang++ cmake -Bbuild-clang -DCMAKE_BUILD_TYPE=Debug -G'Ninja Multi-Config' -DCMAKE_EXPORT_COMPILE_COMMANDS=1
 
     - name: Build (Clang, Debug)
       run: cmake --build build-clang --config Debug
     - name: Unit tests (Clang, Debug)
       run: ./build-clang/Debug/ninja_test
     - name: Python tests (Clang, Debug)
-      run: pytest-3 --color=yes ../../misc
+      run: pytest-3 --color=yes ../..
       working-directory: build-clang/Debug
 
     - name: Build (Clang, Release)
@@ -149,12 +120,12 @@ jobs:
     - name: Unit tests (Clang, Release)
       run: ./build-clang/Release/ninja_test
     - name: Python tests (Clang, Release)
-      run: pytest-3 --color=yes ../../misc
+      run: pytest-3 --color=yes ../..
       working-directory: build-clang/Release
 
-#     - name: clang-tidy
-#       run: /usr/lib/llvm-10/share/clang/run-clang-tidy.py -header-filter=src
-#       working-directory: build-clang
+    - name: clang-tidy
+      run: /usr/lib/llvm-10/share/clang/run-clang-tidy.py -header-filter=src
+      working-directory: build-clang
 
   build-with-python:
     runs-on: [ubuntu-latest]
@@ -182,6 +153,7 @@ jobs:
     runs-on: [ubuntu-latest]
     steps:
     - uses: actions/checkout@v3
+
     - name: Build
       uses: uraimo/run-on-arch-action@v2
       with:
@@ -205,18 +177,13 @@ jobs:
 
           # BUILD
           cmake -DCMAKE_BUILD_TYPE=Release -B release-build
-          cmake --build release-build --parallel --config Release --target ninja
-          cmake --build release-build --parallel --config Release --target ninja_test
-          echo Done with Release build-----------------------
+          cmake --build release-build --parallel --config Release
           strip release-build/ninja
-          echo Done with Release strip-----------------------
           file release-build/ninja
 
           # TEST
           pushd release-build
-           echo About to run tests---------------------------
           ./ninja_test
-          echo Done with running tests-----------------------
           popd
 
           # CREATE ARCHIVE
