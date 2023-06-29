@@ -44,7 +44,7 @@ jobs:
     - name: Build release ninja
       shell: bash
       run: |
-        cmake -DCMAKE_BUILD_TYPE=Release -B release-build -DNINJA_USE_PREBUILT_FLATC=ON
+        cmake -DCMAKE_BUILD_TYPE=Release -B release-build -DNINJA_USE_PREBUILT_FLATC=ON -DNINJA_NO_FLATC_BUILD=ON
         cmake --build release-build --parallel --config Release
         strip release-build/ninja
 
@@ -56,7 +56,6 @@ jobs:
       run: |
         mkdir artifact
         7z a artifact/ninja-linux.zip ./release-build/ninja
-        7z a artifact/flatc-linux.zip ./release-build/vendor/google/flatbuffers/flatbuffers-23.5.26/src/Release/flatc
 
     # Upload ninja binary archive as an artifact
     - name: Upload artifact
