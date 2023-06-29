@@ -27,6 +27,7 @@ if(NINJA_USE_PREBUILT_FLATC)
 	endif()
 else()
 	# Build flatc
+	set(FLATC_BUILD_DEP flatc)
 	if(WIN32)
 		set(FLATC_EXECUTABLE ${CMAKE_BINARY_DIR}/vendor/google/flatbuffers/flatbuffers-23.5.26/src/$<CONFIG>/flatc.exe)
 		set(FLATBUFFERS_STATIC_FLATC ON)
@@ -37,13 +38,13 @@ else()
 		set(FLATC_EXECUTABLE ${CMAKE_BINARY_DIR}/vendor/google/flatbuffers/flatbuffers-23.5.26/src/$<CONFIG>/flatc)
 		set(FLATBUFFERS_STATIC_FLATC ON)
 	endif()
-
-	set(FLATC_BUILD_DEP flatc)
-	set(FLATBUFFERS_INSTALL ON)
-	set(FLATBUFFERS_BUILD_TESTS OFF)
-
-	add_subdirectory(${CMAKE_SOURCE_DIR}/vendor/google/flatbuffers/flatbuffers-23.5.26/src)
 endif()
+
+
+set(FLATBUFFERS_INSTALL ON)
+set(FLATBUFFERS_BUILD_TESTS OFF)
+
+add_subdirectory(${CMAKE_SOURCE_DIR}/vendor/google/flatbuffers/flatbuffers-23.5.26/src)
 
 set(FLATC_INCLUDE_FOLDER ${CMAKE_SOURCE_DIR}/vendor/google/flatbuffers/flatbuffers-23.5.26/src/include)
 set(FLATC_SCHEMA_FBS ${CMAKE_SOURCE_DIR}/src/binja.proto)
