@@ -18,6 +18,7 @@ jobs:
           suffix: ''
         - arch: 'arm64'
           suffix: 'arm64'
+          flag: -DNINJA_USE_PREBUILT_FLATC=ON
 
     steps:
     - uses: actions/checkout@v2
@@ -38,7 +39,7 @@ jobs:
     - name: Build ninja
       shell: bash
       run: |
-        cmake -Bbuild -A ${{ matrix.arch }} -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_C_COMPILER_LAUNCHER=sccache
+        cmake -Bbuild -A ${{ matrix.arch }} ${{ matrix.flag }} -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_C_COMPILER_LAUNCHER=sccache
         cmake --build build --parallel --config Debug
         cmake --build build --parallel --config Release
         
