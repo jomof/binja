@@ -25,15 +25,15 @@ jobs:
     - name: Install dependencies
       run: choco install re2c sccache
 
-    - name: Cache C/C++ Build Results
-      uses: actions/cache@v3
-      with:
-        path: C:/Users/runneradmin/AppData/Local/Mozilla/sccache/cache"
-        key: ${{ runner.os }}-${{ matrix.arch }}-sccache
+#     - name: Cache C/C++ Build Results
+#       uses: actions/cache@v3
+#       with:
+#         path: C:/Users/runneradmin/AppData/Local/Mozilla/sccache/cache"
+#         key: ${{ runner.os }}-${{ matrix.arch }}-sccache
         
-    - name: Dump sccache stats (before)
-      shell: bash
-      run: sccache --show-stats
+#     - name: Dump sccache stats (before)
+#       shell: bash
+#       run: sccache --show-stats
 
     - name: Build ninja
       shell: bash
