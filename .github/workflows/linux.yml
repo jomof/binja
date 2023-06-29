@@ -180,7 +180,7 @@ jobs:
           ./cmake-${CMAKE_VERSION}-Linux-aarch64.sh --skip-license --prefix=/usr/local
 
           # BUILD
-          cmake -DCMAKE_BUILD_TYPE=Release -B release-build
+          cmake -DCMAKE_BUILD_TYPE=Release -B release-build -DNINJA_USE_PREBUILT_FLATC=ON
           cmake --build release-build --parallel --config Release
           strip release-build/ninja
           file release-build/ninja
