@@ -94,7 +94,7 @@ jobs:
     - name: Unit tests (GCC, Debug)
       run: ./build-gcc/Debug/ninja_test
     - name: Python tests (GCC, Debug)
-      run: pytest-3 --color=yes ../..
+      run: pytest-3 --color=yes ../../misc
       working-directory: build-gcc/Debug
 
     - name: Build (GCC, Release)
@@ -102,7 +102,7 @@ jobs:
     - name: Unit tests (GCC, Release)
       run: ./build-gcc/Release/ninja_test
     - name: Python tests (GCC, Release)
-      run: pytest-3 --color=yes ../..
+      run: pytest-3 --color=yes ../../misc
       working-directory: build-gcc/Release
 
     - name: Configure (Clang)
@@ -113,7 +113,7 @@ jobs:
     - name: Unit tests (Clang, Debug)
       run: ./build-clang/Debug/ninja_test
     - name: Python tests (Clang, Debug)
-      run: pytest-3 --color=yes ../..
+      run: pytest-3 --color=yes ../../misc
       working-directory: build-clang/Debug
 
     - name: Build (Clang, Release)
@@ -121,7 +121,7 @@ jobs:
     - name: Unit tests (Clang, Release)
       run: ./build-clang/Release/ninja_test
     - name: Python tests (Clang, Release)
-      run: pytest-3 --color=yes ../..
+      run: pytest-3 --color=yes ../../misc
       working-directory: build-clang/Release
 
     - name: clang-tidy
