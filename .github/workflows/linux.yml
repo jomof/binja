@@ -90,10 +90,10 @@ jobs:
         apt install -y python3-pytest ninja-build clang-tidy python3-pip clang
         pip3 install cmake==3.17.*
     - name: Configure (GCC)
-      run: cmake -Bbuild-gcc -DCMAKE_BUILD_TYPE=Debug -G'Ninja Multi-Config'
+      run: cmake -Bbuild-gcc -DCMAKE_BUILD_TYPE=Debug -G'Ninja Multi-Config' -DNINJA_USE_PREBUILT_FLATC=ON
 
     - name: Build (GCC, Debug)
-      run: cmake --build build-gcc --config Debug
+      run: cmake --build build-gcc --config Debug 
     - name: Unit tests (GCC, Debug)
       run: ./build-gcc/Debug/ninja_test
     - name: Python tests (GCC, Debug)
@@ -127,9 +127,9 @@ jobs:
       run: pytest-3 --color=yes ../../misc
       working-directory: build-clang/Release
 
-#     - name: clang-tidy
-#       run: /usr/lib/llvm-10/share/clang/run-clang-tidy.py -header-filter=src
-#       working-directory: build-clang
+    - name: clang-tidy
+      run: /usr/lib/llvm-10/share/clang/run-clang-tidy.py -header-filter=src
+      working-directory: build-clang
 
   build-with-python:
     runs-on: [ubuntu-latest]
