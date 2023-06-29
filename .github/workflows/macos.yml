@@ -51,6 +51,7 @@ jobs:
       run: |
         mkdir artifact
         7z a artifact/ninja-mac.zip ./build/ninja
+        7z a artifact/flatc-mac.zip ./build/vendor/google/flatbuffers/flatbuffers-23.5.26/src/flatc
 
     # Upload ninja binary archives as an artifacts
     - name: Upload artifacts
