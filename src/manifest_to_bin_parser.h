@@ -12,18 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NINJA_MANIFEST_PARSER_H_
-#define NINJA_MANIFEST_PARSER_H_
+#ifndef NINJA_MANIFEST_TO_BIN_PARSER_H_
+#define NINJA_MANIFEST_TO_BIN_PARSER_H_
 
 #include "parser.h"
 #include "manifest_parser_options.h"
+#include "binja_generated.h"
 
 struct BindingEnv;
 struct EvalString;
 
 /// Parses .ninja files.
-struct ManifestParser : public Parser {
-  ManifestParser(State* state, FileReader* file_reader,
+struct ManifestToBinParser : public Parser {
+  ManifestToBinParser(State* state, FileReader* file_reader,
                  ManifestParserOptions options = ManifestParserOptions());
 
   /// Parse a text string of input.  Used by tests.
@@ -32,12 +33,12 @@ struct ManifestParser : public Parser {
     return Parse("input", input, err);
   }
 
+  binja::CompiledBuildNinja * compiled_ = 0;
 
-private:
   /// Parse a file, given its contents as a string.
   bool Parse(const std::string& filename, const std::string& input,
              std::string* err);
-
+private:
   /// Parse various statement types.
   bool ParsePool(std::string* err);
   bool ParseRule(std::string* err);
@@ -48,9 +49,20 @@ private:
   /// Parse either a 'subninja' or 'include' line.
   bool ParseFileInclude(bool new_scope, std::string* err);
 
-  BindingEnv* env_;
+  /// Binja flatbuffer support
+  flatbuffers::Offset<binja::ParseEvalString> CreateParseEvalString(const EvalString & eval_string);
+  flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<binja::ParseEvalString>>> CreateParseEvalStringVector(const std::vector<EvalString> & eval_strings);
+
+  flatbuffers::FlatBufferBuilder fb_;
+  std::vector<flatbuffers::Offset<binja::ParseNode>> nodes_;
+  std::vector<flatbuffers::Offset<binja::ParseRule>> rules_;
+  std::vector<flatbuffers::Offset<binja::ParseEdge>> edges_;
+  std::vector<flatbuffers::Offset<binja::ParseDefault>> defaults_;
+  std::vector<flatbuffers::Offset<binja::ParsePool>> pools_;
+  std::vector<flatbuffers::Offset<binja::ParseBinding>> bindings_;
+  std::vector<flatbuffers::Offset<binja::ParseInclude>> includes_;
   ManifestParserOptions options_;
   bool quiet_;
 };
 
-#endif  // NINJA_MANIFEST_PARSER_H_
+#endif  // NINJA_MANIFEST_TO_BIN_PARSER_H_

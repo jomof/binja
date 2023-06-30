@@ -13,8 +13,8 @@
 // limitations under the License.
 
 #include "manifest_parser.h"
+#include "manifest_to_bin_parser.h"
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <vector>
 
@@ -22,25 +22,20 @@
 #include "state.h"
 #include "util.h"
 #include "version.h"
-#include "flatbuffers/flatbuffer_builder.h"
-#include "binja_generated.h"
 
 using namespace std;
 
 ManifestParser::ManifestParser(State* state, FileReader* file_reader,
                                ManifestParserOptions options)
     : Parser(state, file_reader),
-      options_(options), quiet_(false) {
+      options_(options), quiet_(false)/*, m2b_(state, file_reader, options)*/ {
   env_ = &state->bindings_;
 }
 
 bool ManifestParser::Parse(const string& filename, const string& input,
                            string* err) {
-
-  flatbuffers::FlatBufferBuilder builder;
-  auto name = builder.CreateSharedString("bob");
-  auto person = binja::CreatePerson(builder, name);
-  builder.Finish(person);
+  ManifestToBinParser m2b(state_, file_reader_, options_);
+  m2b.Parse(filename, input, err);
 
   lexer_.Start(filename, input);
 

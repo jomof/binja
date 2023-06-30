@@ -184,6 +184,7 @@ add_library(libninja OBJECT
 	src/json.cc
 	src/line_printer.cc
 	src/manifest_parser.cc
+	src/manifest_to_bin_parser.cc
 	src/metrics.cc
 	src/missing_deps.cc
 	src/parser.cc
