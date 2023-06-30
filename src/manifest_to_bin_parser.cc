@@ -102,7 +102,7 @@ bool ManifestToBinParser::Parse(const string& filename, const string& input,
           fb_.CreateVector(bindings_),
           fb_.CreateVector(includes_)));
       fb_.Finished();
-      auto ptr = fb_.GetBufferPointer();
+      //auto ptr = fb_.GetBufferPointer();
       return true;
     }
     case Lexer::NEWLINE:

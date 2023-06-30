@@ -26,7 +26,7 @@ struct ManifestToBinParser;
 struct ManifestParser : public Parser {
   ManifestParser(State* state, FileReader* file_reader,
                  ManifestParserOptions options = ManifestParserOptions());
-  ~ManifestParser();
+  virtual ~ManifestParser();
 
   /// Parse a text string of input.  Used by tests.
   bool ParseTest(const std::string& input, std::string* err) {

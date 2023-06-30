@@ -29,8 +29,9 @@ using namespace std;
 ManifestParser::ManifestParser(State* state, FileReader* file_reader,
                                ManifestParserOptions options)
     : Parser(state, file_reader),
-      options_(options), quiet_(false),
-      m2b_(new ManifestToBinParser(state, file_reader, options)) {
+      options_(options),
+      m2b_(new ManifestToBinParser(state, file_reader, options)),
+      quiet_(false) {
   env_ = &state->bindings_;
 }
 
