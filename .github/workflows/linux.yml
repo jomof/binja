@@ -44,7 +44,7 @@ jobs:
     - name: Build release ninja
       shell: bash
       run: |
-        cmake -DCMAKE_BUILD_TYPE=Release -B release-build -DNINJA_BUILD_FLATC=ON
+        cmake -DCMAKE_BUILD_TYPE=Release -B release-build
         cmake --build release-build --parallel --config Release
         strip release-build/ninja
 
@@ -91,7 +91,7 @@ jobs:
         apt install -y python3-pytest ninja-build clang-tidy python3-pip clang
         pip3 install cmake==3.17.*
     - name: Configure (GCC)
-      run: cmake -Bbuild-gcc -G'Ninja Multi-Config' -DNINJA_USE_PREBUILT_FLATC=ON -DNINJA_NO_FLATC_BUILD=ON
+      run: cmake -Bbuild-gcc -G'Ninja Multi-Config'
 
     - name: Build (GCC, Debug)
       run: cmake --build build-gcc --config Debug 
@@ -110,7 +110,7 @@ jobs:
       working-directory: build-gcc/Release
 
     - name: Configure (Clang)
-      run: CC=clang CXX=clang++ cmake -Bbuild-clang -G'Ninja Multi-Config' -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DNINJA_USE_PREBUILT_FLATC=ON -DNINJA_NO_FLATC_BUILD=ON
+      run: CC=clang CXX=clang++ cmake -Bbuild-clang -G'Ninja Multi-Config' -DCMAKE_EXPORT_COMPILE_COMMANDS=1
 
     - name: Build (Clang, Debug)
       run: cmake --build build-clang --config Debug
@@ -181,7 +181,7 @@ jobs:
           ./cmake-${CMAKE_VERSION}-Linux-aarch64.sh --skip-license --prefix=/usr/local
 
           # BUILD
-          cmake -DCMAKE_BUILD_TYPE=Release -B release-build -DNINJA_USE_PREBUILT_FLATC=ON -DNINJA_NO_FLATC_BUILD=ON
+          cmake -DCMAKE_BUILD_TYPE=Release -B release-build
           cmake --build release-build --parallel --config Release
           strip release-build/ninja
           file release-build/ninja
