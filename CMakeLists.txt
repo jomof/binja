@@ -7,7 +7,7 @@ include(ExternalProject)
 option(NINJA_BUILD_BINARY "Build ninja binary" ON)
 option(NINJA_FORCE_PSELECT "Use pselect() even on platforms that provide ppoll()" OFF)
 option(NINJA_BUILD_FLATC "Use to enable build and use of flatc.exe" OFF)
-option(NINJA_BUILD_FLATC_ONLY "Use to enable build of flatc.exe" OFF)
+option(NINJA_JUST_BUILD_FLATC "Use to enable build of flatc.exe" OFF)
 
 project(ninja CXX)
 
@@ -39,7 +39,7 @@ else()
 	endif()
 endif()
 
-if(NINJA_BUILD_FLATC OR NINJA_BUILD_FLATC_ONLY)
+if(NINJA_BUILD_FLATC OR NINJA_JUST_BUILD_FLATC)
 	set(FLATBUFFERS_INSTALL ON)
 	set(FLATBUFFERS_BUILD_TESTS OFF)
 	add_subdirectory(${CMAKE_SOURCE_DIR}/vendor/google/flatbuffers/flatbuffers-23.5.26/src)
