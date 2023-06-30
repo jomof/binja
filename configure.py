@@ -315,7 +315,6 @@ def search_system_path(file_name):
 if platform.is_msvc():
     if not search_system_path('cl.exe'):
         raise Exception('cl.exe not found. Run again from the Developer Command Prompt for VS')
-    flatc = './vendor/google/flatbuffers/flatbuffers-23.5.26/bin/windows/flatc.exe'
     cflags = ['/showIncludes',
               '/nologo',  # Don't print startup banner.
               '/Zi',  # Create pdb with debug info.
@@ -344,7 +343,6 @@ if platform.is_msvc():
         cflags += ['/Ox', '/DNDEBUG', '/GL']
         ldflags += ['/LTCG', '/OPT:REF', '/OPT:ICF']
 else:
-    flatc = './vendor/google/flatbuffers/flatbuffers-23.5.26/bin/linux/flatc'
     cflags = ['-g', '-Wall', '-Wextra',
               '-Wno-deprecated',
               '-Wno-missing-field-initializers',
@@ -405,8 +403,16 @@ if platform.supports_ninja_browse():
     cflags.append('-DNINJA_HAVE_BROWSE')
 
 # Generate flatbuffer header
+if platform.platform() == 'darwin':
+    flatc = './vendor/google/flatbuffers/flatbuffers-23.5.26/bin/darwin/flatc'
+elif platform.platform() == 'windows':
+    flatc = './vendor/google/flatbuffers/flatbuffers-23.5.26/bin/windows/flatc.exe'
+else:
+    flatc = './vendor/google/flatbuffers/flatbuffers-23.5.26/bin/linux/flatc'
+
 flatc_proc = subprocess.Popen([flatc, '--proto', '-o', 'build/flatc','-c', 'src/binja.proto'])
 flatc_proc.wait()
+print()
 
 # Flatbuffer headers
 cflags.append('-I./vendor/google/flatbuffers/flatbuffers-23.5.26/src/include')
@@ -542,6 +548,7 @@ for name in ['build',
              'json',
              'line_printer',
              'manifest_parser',
+             'manifest_to_bin_parser',
              'metrics',
              'missing_deps',
              'parser',
