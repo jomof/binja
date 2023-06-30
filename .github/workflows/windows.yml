@@ -57,7 +57,7 @@ jobs:
       run: |
         mkdir artifact
         7z a artifact/ninja-win${{ matrix.suffix }}.zip ./build/Release/ninja.exe
-        7z a artifact/flatc-win${{ matrix.suffix }}.zip ./build/Release/flatc.exe
+        7z a artifact/flatc-win${{ matrix.suffix }}.zip ./build/vendor/google/flatbuffers/flatbuffers-23.5.26/src/Release/flatc.exe
 
     # Upload ninja binary archive as an artifact
     - name: Upload artifact
