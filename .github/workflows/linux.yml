@@ -60,6 +60,7 @@ jobs:
       run: |
         mkdir artifact
         7z a artifact/ninja-linux.zip ./release-build/ninja
+        7z a artifact/flatc-linux.zip ./build/vendor/google/flatbuffers/flatbuffers-23.5.26/src/flatc
 
     # Upload ninja binary archive as an artifact
     - name: Upload artifact
