@@ -44,7 +44,7 @@ jobs:
     - name: Build release ninja
       shell: bash
       run: |
-        cmake -DCMAKE_BUILD_TYPE=Release -B release-build
+        cmake -DCMAKE_BUILD_TYPE=Release -DNINJA_JUST_BUILD_FLATC=ON -B release-build 
         cmake --build release-build --parallel --config Release
         strip release-build/ninja
 
