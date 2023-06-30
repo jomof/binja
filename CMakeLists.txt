@@ -6,7 +6,6 @@ include(ExternalProject)
 
 option(NINJA_BUILD_BINARY "Build ninja binary" ON)
 option(NINJA_FORCE_PSELECT "Use pselect() even on platforms that provide ppoll()" OFF)
-option(NINJA_USE_PREBUILT_FLATC "Use the local prebuilt flatc.exe" OFF)
 option(NINJA_BUILD_FLATC "Use to enable build of flatc.exe" OFF)
 
 project(ninja CXX)
@@ -16,7 +15,7 @@ if(POLICY CMP0135)
 endif()
 
 # --- flatc
-if(NINJA_USE_PREBUILT_FLATC)
+if(NOT NINJA_BUILD_FLATC)
 	if(WIN32)
 		set(FLATC_EXECUTABLE ${CMAKE_SOURCE_DIR}/vendor/google/flatbuffers/flatbuffers-23.5.26/bin/windows/flatc.exe)
 	elseif(APPLE)
