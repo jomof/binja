@@ -172,6 +172,7 @@ add_library(libninja OBJECT
 	src/build.cc
 	src/clean.cc
 	src/clparser.cc
+	src/compiled_build_ninja_iterator.cc
 	src/dyndep.cc
 	src/dyndep_parser.cc
 	src/debug_flags.cc
@@ -305,6 +306,7 @@ if(BUILD_TESTING)
     target_sources(ninja_test PRIVATE src/includes_normalize_test.cc src/msvc_helper_test.cc)
   endif()
   target_link_libraries(ninja_test PRIVATE libninja libninja-re2c)
+  target_include_directories(ninja_test PRIVATE ${FLATC_INCLUDE_FOLDER} ${FLATC_GENERATED_FOLDER})
 
   foreach(perftest
     build_log_perftest

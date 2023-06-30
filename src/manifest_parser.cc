@@ -22,6 +22,7 @@
 #include "state.h"
 #include "util.h"
 #include "version.h"
+#include "binja_generated.h"
 
 using namespace std;
 
@@ -36,6 +37,7 @@ bool ManifestParser::Parse(const string& filename, const string& input,
                            string* err) {
   ManifestToBinParser m2b(state_, file_reader_, options_);
   m2b.Parse(filename, input, err);
+  auto xx = m2b.compiled_;
 
   lexer_.Start(filename, input);
 
