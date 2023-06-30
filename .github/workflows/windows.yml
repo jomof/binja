@@ -34,7 +34,7 @@ jobs:
     - name: Build ninja
       shell: bash
       run: |
-        cmake -Bbuild -A ${{ matrix.arch }} ${{ matrix.flag }} -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_C_COMPILER_LAUNCHER=sccache
+        cmake -Bbuild -A ${{ matrix.arch }} ${{ matrix.flag }} -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_C_COMPILER_LAUNCHER=sccache -DNINJA_JUST_BUILD_FLATC=ON
         cmake --build build --parallel --config Debug
         cmake --build build --parallel --config Release
         
@@ -57,6 +57,7 @@ jobs:
       run: |
         mkdir artifact
         7z a artifact/ninja-win${{ matrix.suffix }}.zip ./build/Release/ninja.exe
+        7z a artifact/flatc-win${{ matrix.suffix }}.zip ./build/Release/flatc.exe
 
     # Upload ninja binary archive as an artifact
     - name: Upload artifact
