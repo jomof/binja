@@ -16,9 +16,9 @@ jobs:
         include:
         - arch: 'x64'
           suffix: ''
+          flag: -DNINJA_BUILD_FLATC=ON
         - arch: 'arm64'
           suffix: 'arm64'
-          flag: -DNINJA_USE_PREBUILT_FLATC=ON
 
     steps:
     - uses: actions/checkout@v2
@@ -31,10 +31,6 @@ jobs:
       with:
         path: C:/Users/runneradmin/AppData/Local/Mozilla/sccache/cache"
         key: ${{ runner.os }}-${{ matrix.arch }}-sccache
-        
-#     - name: Dump sccache stats (before)
-#       shell: bash
-#       run: sccache --show-stats
 
     - name: Build ninja
       shell: bash
