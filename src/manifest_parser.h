@@ -17,6 +17,7 @@
 
 #include "parser.h"
 #include "manifest_parser_options.h"
+#include "manifest_to_bin_parser.h"
 
 struct BindingEnv;
 struct EvalString;
@@ -31,7 +32,6 @@ struct ManifestParser : public Parser {
     quiet_ = true;
     return Parse("input", input, err);
   }
-
 
 private:
   /// Parse a file, given its contents as a string.
@@ -50,6 +50,7 @@ private:
 
   BindingEnv* env_;
   ManifestParserOptions options_;
+  ManifestToBinParser m2b_;
   bool quiet_;
 };
 

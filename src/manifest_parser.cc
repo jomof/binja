@@ -29,15 +29,15 @@ using namespace std;
 ManifestParser::ManifestParser(State* state, FileReader* file_reader,
                                ManifestParserOptions options)
     : Parser(state, file_reader),
-      options_(options), quiet_(false)/*, m2b_(state, file_reader, options)*/ {
+      options_(options), quiet_(false), m2b_(state, file_reader, options) {
   env_ = &state->bindings_;
 }
 
 bool ManifestParser::Parse(const string& filename, const string& input,
                            string* err) {
-  ManifestToBinParser m2b(state_, file_reader_, options_);
-  m2b.Parse(filename, input, err);
-  auto xx = m2b.compiled_;
+//  ManifestToBinParser m2b(state_, file_reader_, options_);
+  m2b_.Parse(filename, input, err);
+//  auto xx = m2b.compiled_;
 
   lexer_.Start(filename, input);
 

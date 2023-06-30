@@ -3,6 +3,8 @@
 #include "binja_generated.h"
 
 CompiledBuildNinjaIterator:: CompiledBuildNinjaIterator(
-    binja::CompiledBuildNinja * compiled) : compiled_(compiled) {
+    binja::CompiledBuildNinja * compiled) :
+      compiled_(compiled),
+      command_(0) {
   compiled_ = compiled;
 }
