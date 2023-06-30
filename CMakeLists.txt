@@ -171,8 +171,7 @@ add_library(libninja OBJECT
 	src/build.cc
 	src/clean.cc
 	src/clparser.cc
-	src/compiled_build_ninja_iterator.cc
-	src/dyndep.cc
+		src/dyndep.cc
 	src/dyndep_parser.cc
 	src/debug_flags.cc
 	src/deps_log.cc

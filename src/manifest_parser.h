@@ -17,15 +17,16 @@
 
 #include "parser.h"
 #include "manifest_parser_options.h"
-#include "manifest_to_bin_parser.h"
 
 struct BindingEnv;
 struct EvalString;
+struct ManifestToBinParser;
 
 /// Parses .ninja files.
 struct ManifestParser : public Parser {
   ManifestParser(State* state, FileReader* file_reader,
                  ManifestParserOptions options = ManifestParserOptions());
+  ~ManifestParser();
 
   /// Parse a text string of input.  Used by tests.
   bool ParseTest(const std::string& input, std::string* err) {
@@ -50,7 +51,7 @@ private:
 
   BindingEnv* env_;
   ManifestParserOptions options_;
-  ManifestToBinParser m2b_;
+  ManifestToBinParser* m2b_ = 0;
   bool quiet_;
 };
 
