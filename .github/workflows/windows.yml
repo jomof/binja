@@ -16,7 +16,6 @@ jobs:
         include:
         - arch: 'x64'
           suffix: ''
-          flag: -DNINJA_BUILD_FLATC=ON
         - arch: 'arm64'
           suffix: 'arm64'
 
