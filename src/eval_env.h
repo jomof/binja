@@ -18,7 +18,7 @@
 #include <map>
 #include <string>
 #include <vector>
-
+#include <memory>
 #include "string_piece.h"
 
 struct Rule;

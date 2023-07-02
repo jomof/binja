@@ -18,6 +18,7 @@
 #include <string>
 #include <vector>
 #include <queue>
+#include <memory>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -83,13 +84,13 @@ struct SubprocessSet {
   SubprocessSet();
   ~SubprocessSet();
 
-  Subprocess* Add(const std::string& command, bool use_console = false);
+  std::shared_ptr<Subprocess> Add(const std::string& command, bool use_console = false);
   bool DoWork();
-  Subprocess* NextFinished();
+  std::shared_ptr<Subprocess> NextFinished();
   void Clear();
 
-  std::vector<Subprocess*> running_;
-  std::queue<Subprocess*> finished_;
+  std::vector<std::shared_ptr<Subprocess>> running_;
+  std::queue<std::shared_ptr<Subprocess>> finished_;
 
 #ifdef _WIN32
   static BOOL WINAPI NotifyInterrupted(DWORD dwCtrlType);

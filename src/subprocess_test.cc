@@ -42,8 +42,8 @@ struct SubprocessTest : public testing::Test {
 
 // Run a command that fails and emits to stderr.
 TEST_F(SubprocessTest, BadCommandStderr) {
-  Subprocess* subproc = subprocs_.Add("cmd /c ninja_no_such_command");
-  ASSERT_NE((Subprocess *) 0, subproc);
+  auto subproc = subprocs_.Add("cmd /c ninja_no_such_command");
+  ASSERT_NE(nullptr, subproc);
 
   while (!subproc->Done()) {
     // Pretend we discovered that stderr was ready for writing.
@@ -56,8 +56,8 @@ TEST_F(SubprocessTest, BadCommandStderr) {
 
 // Run a command that does not exist
 TEST_F(SubprocessTest, NoSuchCommand) {
-  Subprocess* subproc = subprocs_.Add("ninja_no_such_command");
-  ASSERT_NE((Subprocess *) 0, subproc);
+  auto subproc = subprocs_.Add("ninja_no_such_command");
+  ASSERT_NE(nullptr, subproc);
 
   while (!subproc->Done()) {
     // Pretend we discovered that stderr was ready for writing.
@@ -75,8 +75,8 @@ TEST_F(SubprocessTest, NoSuchCommand) {
 #ifndef _WIN32
 
 TEST_F(SubprocessTest, InterruptChild) {
-  Subprocess* subproc = subprocs_.Add("kill -INT $$");
-  ASSERT_NE((Subprocess *) 0, subproc);
+  auto subproc = subprocs_.Add("kill -INT $$");
+  ASSERT_NE(nullptr, subproc);
 
   while (!subproc->Done()) {
     subprocs_.DoWork();
@@ -86,8 +86,8 @@ TEST_F(SubprocessTest, InterruptChild) {
 }
 
 TEST_F(SubprocessTest, InterruptParent) {
-  Subprocess* subproc = subprocs_.Add("kill -INT $PPID ; sleep 1");
-  ASSERT_NE((Subprocess *) 0, subproc);
+  auto subproc = subprocs_.Add("kill -INT $PPID ; sleep 1");
+  ASSERT_NE(nullptr, subproc);
 
   while (!subproc->Done()) {
     bool interrupted = subprocs_.DoWork();
@@ -99,8 +99,8 @@ TEST_F(SubprocessTest, InterruptParent) {
 }
 
 TEST_F(SubprocessTest, InterruptChildWithSigTerm) {
-  Subprocess* subproc = subprocs_.Add("kill -TERM $$");
-  ASSERT_NE((Subprocess *) 0, subproc);
+  auto subproc = subprocs_.Add("kill -TERM $$");
+  ASSERT_NE(nullptr, subproc);
 
   while (!subproc->Done()) {
     subprocs_.DoWork();
@@ -110,8 +110,8 @@ TEST_F(SubprocessTest, InterruptChildWithSigTerm) {
 }
 
 TEST_F(SubprocessTest, InterruptParentWithSigTerm) {
-  Subprocess* subproc = subprocs_.Add("kill -TERM $PPID ; sleep 1");
-  ASSERT_NE((Subprocess *) 0, subproc);
+  auto subproc = subprocs_.Add("kill -TERM $PPID ; sleep 1");
+  ASSERT_NE(nullptr, subproc);
 
   while (!subproc->Done()) {
     bool interrupted = subprocs_.DoWork();
@@ -123,8 +123,8 @@ TEST_F(SubprocessTest, InterruptParentWithSigTerm) {
 }
 
 TEST_F(SubprocessTest, InterruptChildWithSigHup) {
-  Subprocess* subproc = subprocs_.Add("kill -HUP $$");
-  ASSERT_NE((Subprocess *) 0, subproc);
+  auto subproc = subprocs_.Add("kill -HUP $$");
+  ASSERT_NE(nullptr, subproc);
 
   while (!subproc->Done()) {
     subprocs_.DoWork();
@@ -134,8 +134,8 @@ TEST_F(SubprocessTest, InterruptChildWithSigHup) {
 }
 
 TEST_F(SubprocessTest, InterruptParentWithSigHup) {
-  Subprocess* subproc = subprocs_.Add("kill -HUP $PPID ; sleep 1");
-  ASSERT_NE((Subprocess *) 0, subproc);
+  auto subproc = subprocs_.Add("kill -HUP $PPID ; sleep 1");
+  ASSERT_NE(nullptr, subproc);
 
   while (!subproc->Done()) {
     bool interrupted = subprocs_.DoWork();
@@ -149,8 +149,8 @@ TEST_F(SubprocessTest, InterruptParentWithSigHup) {
 TEST_F(SubprocessTest, Console) {
   // Skip test if we don't have the console ourselves.
   if (isatty(0) && isatty(1) && isatty(2)) {
-    Subprocess* subproc =
-        subprocs_.Add("test -t 0 -a -t 1 -a -t 2", /*use_console=*/true);
+    auto subproc =
+        subprocs_.Add("test -t 0 -a -t 1 -a -t 2", /*use_console=*/true).get();
     ASSERT_NE((Subprocess*)0, subproc);
 
     while (!subproc->Done()) {
@@ -164,8 +164,8 @@ TEST_F(SubprocessTest, Console) {
 #endif
 
 TEST_F(SubprocessTest, SetWithSingle) {
-  Subprocess* subproc = subprocs_.Add(kSimpleCommand);
-  ASSERT_NE((Subprocess *) 0, subproc);
+  auto subproc = subprocs_.Add(kSimpleCommand);
+  ASSERT_NE(nullptr, subproc);
 
   while (!subproc->Done()) {
     subprocs_.DoWork();
@@ -177,7 +177,7 @@ TEST_F(SubprocessTest, SetWithSingle) {
 }
 
 TEST_F(SubprocessTest, SetWithMulti) {
-  Subprocess* processes[3];
+  shared_ptr<Subprocess> processes[3];
   const char* kCommands[3] = {
     kSimpleCommand,
 #ifdef _WIN32
@@ -191,7 +191,7 @@ TEST_F(SubprocessTest, SetWithMulti) {
 
   for (int i = 0; i < 3; ++i) {
     processes[i] = subprocs_.Add(kCommands[i]);
-    ASSERT_NE((Subprocess *) 0, processes[i]);
+    ASSERT_NE(nullptr, processes[i]);
   }
 
   ASSERT_EQ(3u, subprocs_.running_.size());
@@ -212,7 +212,6 @@ TEST_F(SubprocessTest, SetWithMulti) {
   for (int i = 0; i < 3; ++i) {
     ASSERT_EQ(ExitSuccess, processes[i]->Finish());
     ASSERT_NE("", processes[i]->GetOutput());
-    delete processes[i];
   }
 }
 
@@ -231,10 +230,10 @@ TEST_F(SubprocessTest, SetWithLots) {
     return;
   }
 
-  vector<Subprocess*> procs;
+  vector<shared_ptr<Subprocess>> procs;
   for (size_t i = 0; i < kNumProcs; ++i) {
-    Subprocess* subproc = subprocs_.Add("/bin/echo");
-    ASSERT_NE((Subprocess *) 0, subproc);
+    auto subproc = subprocs_.Add("/bin/echo");
+    ASSERT_NE(nullptr, subproc);
     procs.push_back(subproc);
   }
   while (!subprocs_.running_.empty())
@@ -253,7 +252,7 @@ TEST_F(SubprocessTest, SetWithLots) {
 // Verify that a command that attempts to read stdin correctly thinks
 // that stdin is closed.
 TEST_F(SubprocessTest, ReadStdin) {
-  Subprocess* subproc = subprocs_.Add("cat -");
+  auto subproc = subprocs_.Add("cat -").get();
   while (!subproc->Done()) {
     subprocs_.DoWork();
   }

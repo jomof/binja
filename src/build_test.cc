@@ -1833,7 +1833,7 @@ TEST_F(BuildWithLogTest, RestatMissingInput) {
 
   // See that an entry in the logfile is created, capturing
   // the right mtime
-  BuildLog::LogEntry* log_entry = build_log_.LookupByOutput("out1");
+  auto log_entry = build_log_.LookupByOutput("out1");
   ASSERT_TRUE(NULL != log_entry);
   ASSERT_EQ(restat_mtime, log_entry->mtime);
 
@@ -1876,7 +1876,7 @@ TEST_F(BuildWithLogTest, RestatInputChangesDueToRule) {
   ASSERT_EQ("", err);
   EXPECT_EQ(2u, command_runner_.commands_ran_.size());
   EXPECT_EQ(2u, builder_.plan_.command_edge_count());
-  BuildLog::LogEntry* log_entry = build_log_.LookupByOutput("out1");
+  auto log_entry = build_log_.LookupByOutput("out1");
   ASSERT_TRUE(NULL != log_entry);
   ASSERT_EQ(2u, log_entry->mtime);
 
@@ -2089,7 +2089,7 @@ TEST_F(BuildWithLogTest, RspFileCmdLineChange) {
 
   // 3. Alter the entry in the logfile
   // (to simulate a change in the command line between 2 builds)
-  BuildLog::LogEntry* log_entry = build_log_.LookupByOutput("out");
+  auto log_entry = build_log_.LookupByOutput("out");
   ASSERT_TRUE(NULL != log_entry);
   ASSERT_NO_FATAL_FAILURE(AssertHash(
         "cat out.rsp > out;rspfile=Original very long command",
@@ -2645,7 +2645,7 @@ TEST_F(BuildWithDepsLogTest, TestInputMtimeRaceCondition) {
   ASSERT_TRUE(deps_log.Load("ninja_deps", &state, &err));
   ASSERT_TRUE(deps_log.OpenForWrite("ninja_deps", &err));
 
-  BuildLog::LogEntry* log_entry = NULL;
+  std::shared_ptr<BuildLog::LogEntry> log_entry;
   {
     Builder builder(&state, config_, &build_log, &deps_log, &fs_, &status_, 0);
     builder.command_runner_.reset(&command_runner_);
@@ -2739,7 +2739,7 @@ TEST_F(BuildWithDepsLogTest, TestInputMtimeRaceConditionWithDepFile) {
 
     // See that an entry in the logfile is created. the mtime is 1 due to the command
     // starting when the file system's mtime was 1.
-    BuildLog::LogEntry* log_entry = build_log.LookupByOutput("out");
+    auto log_entry = build_log.LookupByOutput("out");
     ASSERT_TRUE(NULL != log_entry);
     ASSERT_EQ(1u, log_entry->mtime);
 

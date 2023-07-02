@@ -17,6 +17,7 @@
 
 #include "parser.h"
 #include "manifest_parser_options.h"
+#include <memory>
 
 struct BindingEnv;
 struct EvalString;

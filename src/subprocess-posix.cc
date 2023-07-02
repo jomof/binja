@@ -23,6 +23,7 @@
 #include <string.h>
 #include <sys/wait.h>
 #include <spawn.h>
+#include <memory>
 
 #if defined(USE_PPOLL)
 #include <poll.h>
@@ -227,11 +228,6 @@ SubprocessSet::SubprocessSet() {
 
 SubprocessSet::~SubprocessSet() {
   Clear();
-  while(!running_.empty()) {
-    delete running_.back();
-    running_.pop_back();
-  }
-
   if (sigaction(SIGINT, &old_int_act_, 0) < 0)
     Fatal("sigaction: %s", strerror(errno));
   if (sigaction(SIGTERM, &old_term_act_, 0) < 0)
@@ -242,13 +238,12 @@ SubprocessSet::~SubprocessSet() {
     Fatal("sigprocmask: %s", strerror(errno));
 }
 
-Subprocess *SubprocessSet::Add(const string& command, bool use_console) {
-  Subprocess *subprocess = new Subprocess(use_console);
-  if (!subprocess->Start(this, command)) {
-    delete subprocess;
-    return 0;
-  }
+std::shared_ptr<Subprocess> SubprocessSet::Add(const string& command, bool use_console) {
+  std::shared_ptr<Subprocess> subprocess(new Subprocess(use_console));
   running_.push_back(subprocess);
+  if (!subprocess->Start(this, command)) {
+    return nullptr;
+  }
   return subprocess;
 }
 
@@ -257,7 +252,7 @@ bool SubprocessSet::DoWork() {
   vector<pollfd> fds;
   nfds_t nfds = 0;
 
-  for (vector<Subprocess*>::iterator i = running_.begin();
+  for (auto i = running_.begin();
        i != running_.end(); ++i) {
     int fd = (*i)->fd_;
     if (fd < 0)
@@ -268,6 +263,8 @@ bool SubprocessSet::DoWork() {
   }
 
   interrupted_ = 0;
+  auto xxx = &fds.front();
+  auto yyy = &old_mask_;
   int ret = ppoll(&fds.front(), nfds, NULL, &old_mask_);
   if (ret == -1) {
     if (errno != EINTR) {
@@ -282,7 +279,7 @@ bool SubprocessSet::DoWork() {
     return true;
 
   nfds_t cur_nfd = 0;
-  for (vector<Subprocess*>::iterator i = running_.begin();
+  for (auto i = running_.begin();
        i != running_.end(); ) {
     int fd = (*i)->fd_;
     if (fd < 0)
@@ -350,22 +347,20 @@ bool SubprocessSet::DoWork() {
 }
 #endif  // !defined(USE_PPOLL)
 
-Subprocess* SubprocessSet::NextFinished() {
+std::shared_ptr<Subprocess> SubprocessSet::NextFinished() {
   if (finished_.empty())
     return NULL;
-  Subprocess* subproc = finished_.front();
+  auto subproc = finished_.front();
   finished_.pop();
   return subproc;
 }
 
 void SubprocessSet::Clear() {
-  for (vector<Subprocess*>::iterator i = running_.begin();
+  for (auto i = running_.begin();
        i != running_.end(); ++i)
     // Since the foreground process is in our process group, it will receive
     // the interruption signal (i.e. SIGINT or SIGTERM) at the same time as us.
     if (!(*i)->use_console_)
       kill(-(*i)->pid_, interrupted_);
-  for (auto & i : running_)
-    delete i;
   running_.clear();
 }

@@ -63,9 +63,9 @@ TEST_F(BuildLogTest, WriteRead) {
 
   ASSERT_EQ(2u, log1.entries().size());
   ASSERT_EQ(2u, log2.entries().size());
-  BuildLog::LogEntry* e1 = log1.LookupByOutput("out");
+  auto e1 = log1.LookupByOutput("out");
   ASSERT_TRUE(e1);
-  BuildLog::LogEntry* e2 = log2.LookupByOutput("out");
+  auto e2 = log2.LookupByOutput("out");
   ASSERT_TRUE(e2);
   ASSERT_TRUE(*e1 == *e2);
   ASSERT_EQ(15, e1->start_time);
@@ -116,7 +116,7 @@ TEST_F(BuildLogTest, DoubleEntry) {
   EXPECT_TRUE(log.Load(kTestFilename, &err));
   ASSERT_EQ("", err);
 
-  BuildLog::LogEntry* e = log.LookupByOutput("out");
+  auto e = log.LookupByOutput("out");
   ASSERT_TRUE(e);
   ASSERT_NO_FATAL_FAILURE(AssertHash("command def", e->command_hash));
 }
@@ -187,7 +187,7 @@ TEST_F(BuildLogTest, SpacesInOutput) {
   EXPECT_TRUE(log.Load(kTestFilename, &err));
   ASSERT_EQ("", err);
 
-  BuildLog::LogEntry* e = log.LookupByOutput("out with space");
+  auto e = log.LookupByOutput("out with space");
   ASSERT_TRUE(e);
   ASSERT_EQ(123, e->start_time);
   ASSERT_EQ(456, e->end_time);
@@ -213,7 +213,7 @@ TEST_F(BuildLogTest, DuplicateVersionHeader) {
   EXPECT_TRUE(log.Load(kTestFilename, &err));
   ASSERT_EQ("", err);
 
-  BuildLog::LogEntry* e = log.LookupByOutput("out");
+  auto e = log.LookupByOutput("out");
   ASSERT_TRUE(e);
   ASSERT_EQ(123, e->start_time);
   ASSERT_EQ(456, e->end_time);
@@ -259,7 +259,7 @@ TEST_F(BuildLogTest, Restat) {
   BuildLog log;
   EXPECT_TRUE(log.Load(kTestFilename, &err));
   ASSERT_EQ("", err);
-  BuildLog::LogEntry* e = log.LookupByOutput("out");
+  auto e = log.LookupByOutput("out");
   ASSERT_EQ(3, e->mtime);
 
   TestDiskInterface testDiskInterface;
@@ -294,7 +294,7 @@ TEST_F(BuildLogTest, VeryLongInputLine) {
   EXPECT_TRUE(log.Load(kTestFilename, &err));
   ASSERT_EQ("", err);
 
-  BuildLog::LogEntry* e = log.LookupByOutput("out");
+  auto e = log.LookupByOutput("out");
   ASSERT_EQ(NULL, e);
 
   e = log.LookupByOutput("out2");
@@ -313,9 +313,9 @@ TEST_F(BuildLogTest, MultiTargetEdge) {
   log.RecordCommand(state_.edges_[0], 21, 22);
 
   ASSERT_EQ(2u, log.entries().size());
-  BuildLog::LogEntry* e1 = log.LookupByOutput("out");
+  auto e1 = log.LookupByOutput("out");
   ASSERT_TRUE(e1);
-  BuildLog::LogEntry* e2 = log.LookupByOutput("out.d");
+  auto e2 = log.LookupByOutput("out.d");
   ASSERT_TRUE(e2);
   ASSERT_EQ("out", e1->output);
   ASSERT_EQ("out.d", e2->output);

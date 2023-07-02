@@ -304,7 +304,7 @@ bool DependencyScan::RecomputeOutputDirty(const Edge* edge,
     return true;
   }
 
-  BuildLog::LogEntry* entry = 0;
+  std::shared_ptr<BuildLog::LogEntry> entry;
 
   // If this is a restat rule, we may have cleaned the output in a
   // previous run and stored the command start time in the build log.

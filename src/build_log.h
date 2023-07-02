@@ -17,6 +17,7 @@
 
 #include <string>
 #include <stdio.h>
+#include <memory>
 
 #include "hash_map.h"
 #include "load_status.h"
@@ -77,7 +78,7 @@ struct BuildLog {
   };
 
   /// Lookup a previously-run command by its output path.
-  LogEntry* LookupByOutput(const std::string& path);
+  std::shared_ptr<LogEntry> LookupByOutput(const std::string& path);
 
   /// Serialize an entry into a log file.
   bool WriteEntry(FILE* f, const LogEntry& entry);
@@ -90,7 +91,7 @@ struct BuildLog {
   bool Restat(StringPiece path, const DiskInterface& disk_interface,
               int output_count, char** outputs, std::string* err);
 
-  typedef ExternalStringHashMap<LogEntry*>::Type Entries;
+  typedef ExternalStringHashMap<std::shared_ptr<LogEntry>>::Type Entries;
   const Entries& entries() const { return entries_; }
 
  private:

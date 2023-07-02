@@ -458,12 +458,12 @@ struct RealCommandRunner : public CommandRunner {
 
   const BuildConfig& config_;
   SubprocessSet subprocs_;
-  map<const Subprocess*, Edge*> subproc_to_edge_;
+  map<std::shared_ptr<Subprocess>, Edge*> subproc_to_edge_;
 };
 
 vector<Edge*> RealCommandRunner::GetActiveEdges() {
   vector<Edge*> edges;
-  for (map<const Subprocess*, Edge*>::iterator e = subproc_to_edge_.begin();
+  for (auto e = subproc_to_edge_.begin();
        e != subproc_to_edge_.end(); ++e)
     edges.push_back(e->second);
   return edges;
@@ -483,7 +483,7 @@ bool RealCommandRunner::CanRunMore() const {
 
 bool RealCommandRunner::StartCommand(Edge* edge) {
   string command = edge->EvaluateCommand();
-  Subprocess* subproc = subprocs_.Add(command, edge->use_console());
+  auto subproc = subprocs_.Add(command, edge->use_console()).get();
   if (!subproc)
     return false;
   subproc_to_edge_.insert(make_pair(subproc, edge));
@@ -492,8 +492,8 @@ bool RealCommandRunner::StartCommand(Edge* edge) {
 }
 
 bool RealCommandRunner::WaitForCommand(Result* result) {
-  Subprocess* subproc = nullptr;
-  while ((subproc = subprocs_.NextFinished()) == NULL) {
+  std::shared_ptr<Subprocess> subproc;
+  while ((subproc = subprocs_.NextFinished()) == nullptr) {
     bool interrupted = subprocs_.DoWork();
     if (interrupted) {
       assert(subproc == nullptr);
@@ -504,11 +504,10 @@ bool RealCommandRunner::WaitForCommand(Result* result) {
   result->status = subproc->Finish();
   result->output = subproc->GetOutput();
 
-  map<const Subprocess*, Edge*>::iterator e = subproc_to_edge_.find(subproc);
+  auto e = subproc_to_edge_.find(subproc);
   result->edge = e->second;
   subproc_to_edge_.erase(e);
 
-  delete subproc;
   return true;
 }
 
