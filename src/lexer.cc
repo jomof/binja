@@ -77,11 +77,11 @@ void Lexer::Start(StringPiece filename, StringPiece input) {
   last_token_ = NULL;
 }
 
-uint64_t  Lexer::GetPosition() {
+size_t Lexer::GetPosition() {
   return last_token_ - input_.begin();
 }
 
-void Lexer::SetPosition(uint64_t offset) {
+void Lexer::SetPosition(size_t offset) {
  last_token_ = input_.begin() + offset;
  ofs_ = last_token_;
 }
