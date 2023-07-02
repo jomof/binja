@@ -115,7 +115,7 @@ bool ManifestParser::Parse(const string& filename, const string& input,
   }
 
   lexer_.Start(filename, input);
-//  compiled_ = m2b_->GetCompiled();
+  compiled_ = m2b_->GetCompiled();
 //  if (ifstream(filename).good()) {
 //    throw filename;
 //  }

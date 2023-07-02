@@ -14,10 +14,10 @@
 
 #include "lexer.h"
 
-#include <stdio.h>
-
+#include <cstdio>
 #include "eval_env.h"
 #include "util.h"
+#include <cstddef>
 
 using namespace std;
 
