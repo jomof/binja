@@ -88,7 +88,7 @@ struct Lexer {
   }
 
   /// Construct an error message with context.
-  bool Error(const std::string& message, std::string* err, size_t offset = SIZE_T_MAX);
+  bool Error(const std::string& message, std::string* err, size_t offset = SIZE_MAX);
 
   size_t GetPosition();
 private:
