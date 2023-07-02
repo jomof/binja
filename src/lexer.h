@@ -22,6 +22,10 @@
 #undef ERROR
 #endif
 
+#ifndef SIZE_MAX
+#define SIZE_MAX (static_cast<size_t>(-1) >> 1)
+#endif
+
 struct EvalString;
 
 struct Lexer {
