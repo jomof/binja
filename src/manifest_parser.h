@@ -51,7 +51,7 @@ private:
 
   BindingEnv* env_;
   ManifestParserOptions options_;
-  ManifestToBinParser* m2b_ = 0;
+  ManifestToBinParser* m2b_;
   bool quiet_;
   unsigned int next_node_ = 0;
   const binja::CompiledBuildNinja * compiled_ = 0;

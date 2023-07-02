@@ -21,10 +21,10 @@
 
 using namespace std;
 
-bool Lexer::Error(const string& message, string* err, long offset) {
+bool Lexer::Error(const string& message, string* err, size_t offset) {
   // Compute line/column.
   const char* last_token = last_token_;
-  if (offset >= 0) {
+  if (offset != SIZE_MAX) {
     last_token = input_.str_ + offset;
   }
 
@@ -78,11 +78,6 @@ void Lexer::Start(StringPiece filename, StringPiece input) {
 
 size_t Lexer::GetPosition() {
   return last_token_ - input_.begin();
-}
-
-void Lexer::SetPosition(size_t offset) {
-  last_token_ = input_.begin() + offset;
-  ofs_ = last_token_;
 }
 
 const char* Lexer::TokenName(Token t) {

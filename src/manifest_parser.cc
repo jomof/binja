@@ -15,7 +15,7 @@
 #include "manifest_parser.h"
 #include "manifest_to_bin_parser.h"
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <vector>
 
 #include "graph.h"
@@ -23,10 +23,7 @@
 #include "util.h"
 #include "version.h"
 #include "binja_generated.h"
-#include <sstream>
-#include <iostream> // for std::cerr
-#include "flatbuffers/idl.h"
-#include "flatbuffers/util.h"
+#include <fstream>
 
 using namespace std;
 
@@ -41,10 +38,6 @@ ManifestParser::ManifestParser(State* state, FileReader* file_reader,
 
 ManifestParser::~ManifestParser() {
   delete m2b_;
-}
-
-binja::ParseNode_::Type GetNodeType(const binja::CompiledBuildNinja & compiled, unsigned int index) {
-  return compiled.parse_node()->Get(index)->type();
 }
 
 const binja::ParseRule * GetRule(const binja::CompiledBuildNinja & compiled, unsigned int index) {
@@ -86,11 +79,11 @@ const binja::ParseInclude * GetInclude(const binja::CompiledBuildNinja & compile
 
 string Evaluate(Env* env, const binja::ParseEvalString & parsed) {
   string result;
-  for (auto i = parsed.piece()->begin(); i != parsed.piece()->end(); ++i) {
-    if (i->type() == binja::ParseStringPiece_::Type_RAW)
-      result.append(i->value()->c_str());
+  for (const auto& piece : *parsed.piece()) {
+    if (piece->type() == binja::ParseStringPiece_::Type_RAW)
+      result.append(piece->value()->c_str());
     else
-      result.append(env->LookupVariable(i->value()->c_str()));
+      result.append(env->LookupVariable(piece->value()->c_str()));
   }
   return result;
 }
@@ -115,8 +108,6 @@ void ToEvalStrings(
   }
 }
 
-
-
 bool ManifestParser::Parse(const string& filename, const string& input,
                            string* err) {
   if (!m2b_->Parse(filename, input, err)) {
@@ -124,87 +115,73 @@ bool ManifestParser::Parse(const string& filename, const string& input,
   }
 
   lexer_.Start(filename, input);
-  compiled_ = m2b_->GetCompiled();
+//  compiled_ = m2b_->GetCompiled();
+//  if (ifstream(filename).good()) {
+//    throw filename;
+//  }
 
-  for (;;) {
-    Lexer::Token token = lexer_.ReadToken();
-    switch (token) {
-    case Lexer::POOL:
+  for (;next_node_ < compiled_->parse_node()->size(); ++next_node_) {
+    auto node = compiled_->parse_node()->Get(next_node_);
+    switch(node->type()) {
+    case binja::ParseNode_::Type_POOL:
       if (!ParsePool(err))
         return false;
-      ++next_node_;
       break;
-    case Lexer::BUILD:
+    case binja::ParseNode_::Type_BUILD:
       if (!ParseEdge(err))
         return false;
-      ++next_node_;
       break;
-    case Lexer::RULE:
+    case binja::ParseNode_::Type_RULE:
       if (!ParseRule(err))
         return false;
-      ++next_node_;
       break;
-    case Lexer::DEFAULT:
+    case binja::ParseNode_::Type_DEFAULT:
       if (!ParseDefault(err))
         return false;
-      ++next_node_;
       break;
-    case Lexer::IDENT: {
-      auto node = GetBinding(*compiled_, next_node_++);
-      string value = Evaluate(env_, *node->value());
+    case binja::ParseNode_::Type_BINDING: {
+      auto binding = GetBinding(*compiled_, next_node_);
+      string value = Evaluate(env_, *binding->value());
       // Check ninja_required_version immediately so we can exit
       // before encountering any syntactic surprises.
-      if (node->key()->str() == "ninja_required_version") {
+      if (binding->key()->str() == "ninja_required_version") {
         CheckNinjaVersion(value);
       }
-      env_->AddBinding(node->key()->c_str(), value);
-      lexer_.SetPosition(node->final_position());
+      env_->AddBinding(binding->key()->c_str(), value);
       break;
     }
-    case Lexer::INCLUDE:
+    case binja::ParseNode_::Type_INCLUDE:
       if (!ParseFileInclude(err))
         return false;
-      break;
-    case Lexer::SUBNINJA:
-      if (!ParseFileInclude(err))
-        return false;
-      break;
-    case Lexer::ERROR: {
-      return lexer_.Error(lexer_.DescribeLastError(), err);
-    }
-    case Lexer::TEOF:
-      return true;
-    case Lexer::NEWLINE:
       break;
     default:
-      return lexer_.Error(string("unexpected ") + Lexer::TokenName(token),
-                          err);
+      assert(0); // Unexpected
     }
   }
-  return false;  // not reached
+  return true;
 }
 
 
 bool ManifestParser::ParsePool(string* err) {
   auto node = GetPool(*compiled_, next_node_);
   auto name = node->name()->str();
-  auto depth = atoi(Evaluate(env_, *node->depth()).c_str());
+  auto depth_str = Evaluate(env_, *node->depth());
+  auto depth = (int)strtol(depth_str.c_str(), nullptr, 10);
 
-  if (state_->LookupPool(name) != NULL)
+  if (state_->LookupPool(name) != nullptr)
     return lexer_.Error("duplicate pool '" + name + "'", err, node->pool_position());
 
   if (depth < 0)
     return lexer_.Error("invalid pool depth", err, node->depth_position());
 
   state_->AddPool(new Pool(name, depth));
-  lexer_.SetPosition(node->final_position());
   return true;
 }
 
 bool ManifestParser::ParseRule(string* err) {
   auto node = GetRule(*compiled_, next_node_);
 
-  if (env_->LookupRuleCurrentScope(node->name()->c_str()) != NULL)
+  if (env_->LookupRuleCurrentScope(node->name()->c_str()) != nullptr)
     return lexer_.Error("duplicate rule '" + node->name()->str() + "'", err, node->rule_position());
 
   Rule* rule = new Rule(node->name()->c_str());  // XXX scoped_ptr
@@ -215,7 +192,6 @@ bool ManifestParser::ParseRule(string* err) {
   }
 
   env_->AddRule(rule);
-  lexer_.SetPosition(node->final_position());
   return true;
 }
 
@@ -233,9 +209,7 @@ bool ManifestParser::ParseDefault(string* err) {
     if (!state_->AddDefault(path, &default_err))
       return lexer_.Error(default_err, err, node->default_positions()->Get(i));
   }
-
-  lexer_.SetPosition(node->final_position());
-  return ExpectToken(Lexer::NEWLINE, err);
+  return true;
 }
 
 bool ManifestParser::ParseEdge(string* err) {
@@ -253,8 +227,6 @@ bool ManifestParser::ParseEdge(string* err) {
   if (!rule)
     return lexer_.Error("unknown build rule '" + node->name()->str() + "'", err, node->rule_position());
 
-  lexer_.SetPosition(node->final_position());
-
   // Bindings on edges are rare, so allocate per-edge envs only when needed.
   BindingEnv* env = bindings->size() != 0 ? new BindingEnv(env_) : env_;
   for(const auto& binding: *bindings) {
@@ -267,7 +239,7 @@ bool ManifestParser::ParseEdge(string* err) {
   string pool_name = edge->GetBinding("pool");
   if (!pool_name.empty()) {
     Pool* pool = state_->LookupPool(pool_name);
-    if (pool == NULL)
+    if (pool == nullptr)
       return lexer_.Error("unknown pool name '" + pool_name + "'", err, node->final_position());
     edge->pool_ = pool;
   }
@@ -306,8 +278,8 @@ bool ManifestParser::ParseEdge(string* err) {
   edge->implicit_outs_ = implicit_outs;
 
   edge->inputs_.reserve(ins.size());
-  for (vector<EvalString>::iterator i = ins.begin(); i != ins.end(); ++i) {
-    string path = i->Evaluate(env);
+  for (auto & in : ins) {
+    string path = in.Evaluate(env);
     if (path.empty())
       return lexer_.Error("empty path", err, node->final_position());
     uint64_t slash_bits;
@@ -318,9 +290,8 @@ bool ManifestParser::ParseEdge(string* err) {
   edge->order_only_deps_ = order_only;
 
   edge->validations_.reserve(validations.size());
-  for (std::vector<EvalString>::iterator v = validations.begin();
-      v != validations.end(); ++v) {
-    string path = v->Evaluate(env);
+  for (auto & validation : validations) {
+    string path = validation.Evaluate(env);
     if (path.empty())
       return lexer_.Error("empty path", err, node->final_position());
     uint64_t slash_bits;
@@ -335,7 +306,7 @@ bool ManifestParser::ParseEdge(string* err) {
     // build graph but that has since been fixed.  Filter them out to
     // support users of those old CMake versions.
     Node* out = edge->outputs_[0];
-    vector<Node*>::iterator new_end =
+    auto new_end =
         remove(edge->inputs_.begin(), edge->inputs_.end(), out);
     if (new_end != edge->inputs_.end()) {
       edge->inputs_.erase(new_end, edge->inputs_.end());
@@ -356,7 +327,7 @@ bool ManifestParser::ParseEdge(string* err) {
     CanonicalizePath(&dyndep, &slash_bits);
     edge->dyndep_ = state_->GetNode(dyndep, slash_bits);
     edge->dyndep_->set_dyndep_pending(true);
-    vector<Node*>::iterator dgi =
+    auto dgi =
       std::find(edge->inputs_.begin(), edge->inputs_.end(), edge->dyndep_);
     if (dgi == edge->inputs_.end()) {
       return lexer_.Error("dyndep '" + dyndep + "' is not an input", err, node->final_position());
@@ -366,7 +337,7 @@ bool ManifestParser::ParseEdge(string* err) {
 }
 
 bool ManifestParser::ParseFileInclude(string* err) {
-  auto node = GetInclude(*compiled_, next_node_++);
+  auto node = GetInclude(*compiled_, next_node_);
   string path = Evaluate(env_, *node->path());
 
   ManifestParser subparser(state_, file_reader_, options_);
@@ -375,7 +346,5 @@ bool ManifestParser::ParseFileInclude(string* err) {
   } else {
     subparser.env_ = env_;
   }
-
-  lexer_.SetPosition(node->final_position());
-  return subparser.Load(path, err, &lexer_);
+  return subparser.Load(path, err, &lexer_, node->final_position());
 }

@@ -19,7 +19,7 @@
 
 using namespace std;
 
-bool Parser::Load(const string& filename, string* err, Lexer* parent) {
+bool Parser::Load(const string& filename, string* err, Lexer* parent, size_t position) {
   METRIC_RECORD(".ninja parse");
   string contents;
   string read_err;
@@ -27,7 +27,7 @@ bool Parser::Load(const string& filename, string* err, Lexer* parent) {
       FileReader::Okay) {
     *err = "loading '" + filename + "': " + read_err;
     if (parent)
-      parent->Error(string(*err), err);
+      parent->Error(string(*err), err, position);
     return false;
   }
 

@@ -14,14 +14,12 @@
 
 #include "manifest_to_bin_parser.h"
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <vector>
 
 #include "graph.h"
 #include "state.h"
 #include "util.h"
-#include "version.h"
 #include "flatbuffers/flatbuffer_builder.h"
 #include "binja_generated.h"
 
@@ -29,7 +27,6 @@ using namespace std;
 
 ManifestToBinParser::ManifestToBinParser(State* state, FileReader* file_reader)
     : Parser(state, file_reader) {
-  env_ = &state->bindings_;
 }
 
 bool ManifestToBinParser::Parse(const string& filename, const string& input,
@@ -85,39 +82,15 @@ bool ManifestToBinParser::Parse(const string& filename, const string& input,
       if (!ParseFileInclude(true, err))
         return false;
       break;
-    case Lexer::ERROR: {
-      return lexer_.Error(lexer_.DescribeLastError(), err);
-    }
-    case Lexer::TEOF: {
-//      nodes_.push_back(binja::CreateParseNode(
-//          fb_,
-//          binja::ParseNode_::Type_END_OF_FILE,
-//          0
-//          ));
-//      fb_.Finish(binja::CreateCompiledBuildNinja(
-//          fb_,
-//          fb_.CreateVector(nodes_),
-//          fb_.CreateVector(rules_),
-//          fb_.CreateVector(builds_),
-//          fb_.CreateVector(defaults_),
-//          fb_.CreateVector(pools_),
-//          fb_.CreateVector(bindings_),
-//          fb_.CreateVector(includes_)));
-//      compiled_ = flatbuffers::GetRoot<binja::CompiledBuildNinja>(fb_.GetBufferPointer());
-    //  auto x = (compiled_->parse_node())->Get(0);
-
-      //throw "FINISHED";
-      //auto ptr = fb_.GetBufferPointer();
-      return true;
-    }
+    case Lexer::ERROR: return lexer_.Error(lexer_.DescribeLastError(), err);
+    case Lexer::TEOF: return true;
     case Lexer::NEWLINE:
       break;
     default:
-      return lexer_.Error(string("unexpected ") + Lexer::TokenName(token),
-                          err);
+      return lexer_.Error(string("unexpected ") + Lexer::TokenName(token), err);
     }
   }
-  return false;  // not reached
+  // not reached
 }
 
 const binja::CompiledBuildNinja * ManifestToBinParser::GetCompiled() {
@@ -142,10 +115,10 @@ bool ManifestToBinParser::ParsePool(string* err) {
   if (!ExpectToken(Lexer::NEWLINE, err))
     return false;
 
-  long pool_position = lexer_.GetPosition();
+  auto pool_position = lexer_.GetPosition();
 
   EvalString depth_value;
-  long depth_line = -1;
+  size_t depth_line = SIZE_MAX;
 
   while (lexer_.PeekToken(Lexer::INDENT)) {
     string key;
@@ -158,7 +131,7 @@ bool ManifestToBinParser::ParsePool(string* err) {
     depth_line = lexer_.GetPosition();
   }
 
-  if (depth_line < 0)
+  if (depth_line == SIZE_MAX)
     return lexer_.Error("expected 'depth =' line", err);
 
   nodes_.push_back(binja::CreateParseNode(
@@ -207,7 +180,7 @@ bool ManifestToBinParser::ParseRule(string* err) {
           fb_.CreateSharedString(key),
           CreateParseEvalString(value)));
     } else {
-      // Die on other keyvals for now; revisit if we want to add a
+      // Die on other key values for now; revisit if we want to add a
       // scope here.
       return lexer_.Error("unexpected variable '" + key + "'", err);
     }

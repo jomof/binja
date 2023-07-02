@@ -52,7 +52,6 @@ public:
   flatbuffers::Offset<binja::ParseEvalString> CreateParseEvalString(const EvalString & eval_string);
   flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<binja::ParseEvalString>>> CreateParseEvalStringVector(const std::vector<EvalString> & eval_strings);
 
-  BindingEnv* env_;
   flatbuffers::FlatBufferBuilder fb_;
   std::vector<flatbuffers::Offset<binja::ParseNode>> nodes_;
   std::vector<flatbuffers::Offset<binja::ParseRule>> rules_;

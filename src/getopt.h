@@ -48,7 +48,7 @@ extern "C"
                         const GETOPT_LONG_OPTION_T * longopts, int *longind);
 
 #ifdef __cplusplus
-};
+}
 
 #endif
 
