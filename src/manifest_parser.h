@@ -49,7 +49,7 @@ private:
   /// Parse either a 'subninja' or 'include' line.
   bool ParseFileInclude(std::string* err);
 
-  BindingEnv* env_;
+  std::shared_ptr<BindingEnv> env_;
   ManifestParserOptions options_;
   ManifestToBinParser* m2b_;
   bool quiet_;

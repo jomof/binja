@@ -43,6 +43,10 @@ const unsigned kMaxRecordSize = (1 << 19) - 1;
 
 DepsLog::~DepsLog() {
   Close();
+  for(auto dep : deps_) {
+    delete dep;
+  }
+  deps_.clear();
 }
 
 bool DepsLog::OpenForWrite(const string& path, string* err) {

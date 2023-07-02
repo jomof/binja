@@ -66,9 +66,23 @@ Pool State::kConsolePool("console", 1);
 const Rule State::kPhonyRule("phony");
 
 State::State() {
-  bindings_.AddRule(&kPhonyRule);
+  bindings_ = std::make_shared<BindingEnv>();
+  bindings_->AddRule(&kPhonyRule);
   AddPool(&kDefaultPool);
   AddPool(&kConsolePool);
+}
+
+State::~State() {
+  for(auto path : paths_) {
+    delete path.second;
+  }
+  for(auto edge : edges_) {
+    delete edge;
+  }
+  for(auto pool : pools_) {
+    if (pool.second != &kDefaultPool && pool.second != &kConsolePool)
+      delete pool.second;
+  }
 }
 
 void State::AddPool(Pool* pool) {
@@ -87,7 +101,7 @@ Edge* State::AddEdge(const Rule* rule) {
   Edge* edge = new Edge();
   edge->rule_ = rule;
   edge->pool_ = &State::kDefaultPool;
-  edge->env_ = &bindings_;
+  edge->env_ = bindings_;
   edge->id_ = edges_.size();
   edges_.push_back(edge);
   return edge;

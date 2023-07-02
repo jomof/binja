@@ -126,6 +126,9 @@ BuildLog::BuildLog()
 
 BuildLog::~BuildLog() {
   Close();
+  for(auto& entry : entries_) {
+      delete entry.second;
+  }
 }
 
 bool BuildLog::OpenForWrite(const string& path, const BuildLogUser& user,

@@ -492,11 +492,13 @@ bool RealCommandRunner::StartCommand(Edge* edge) {
 }
 
 bool RealCommandRunner::WaitForCommand(Result* result) {
-  Subprocess* subproc;
+  Subprocess* subproc = nullptr;
   while ((subproc = subprocs_.NextFinished()) == NULL) {
     bool interrupted = subprocs_.DoWork();
-    if (interrupted)
+    if (interrupted) {
+      assert(subproc == nullptr);
       return false;
+    }
   }
 
   result->status = subproc->Finish();
@@ -519,7 +521,7 @@ Builder::Builder(State* state, const BuildConfig& config,
       scan_(state, build_log, deps_log, disk_interface,
             &config_.depfile_parser_options) {
   lock_file_path_ = ".ninja_lock";
-  string build_dir = state_->bindings_.LookupVariable("builddir");
+  string build_dir = state_->bindings_->LookupVariable("builddir");
   if (!build_dir.empty())
     lock_file_path_ = build_dir + "/" + lock_file_path_;
 }

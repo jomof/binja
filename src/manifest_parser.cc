@@ -33,7 +33,7 @@ ManifestParser::ManifestParser(State* state, FileReader* file_reader,
       options_(options),
       m2b_(new ManifestToBinParser(state, file_reader)),
       quiet_(false) {
-  env_ = &state->bindings_;
+  env_ = state->bindings_;
 }
 
 ManifestParser::~ManifestParser() {
@@ -77,7 +77,7 @@ const binja::ParseInclude * GetInclude(const binja::CompiledBuildNinja & compile
   return compiled.include()->Get(node->table_offset());
 }
 
-string Evaluate(Env* env, const binja::ParseEvalString & parsed) {
+string Evaluate(Env * env, const binja::ParseEvalString & parsed) {
   string result;
   for (const auto& piece : *parsed.piece()) {
     if (piece->type() == binja::ParseStringPiece_::Type_RAW)
@@ -141,7 +141,7 @@ bool ManifestParser::Parse(const string& filename, const string& input,
       break;
     case binja::ParseNode_::Type_BINDING: {
       auto binding = GetBinding(*compiled_, next_node_);
-      string value = Evaluate(env_, *binding->value());
+      string value = Evaluate(env_.get(), *binding->value());
       // Check ninja_required_version immediately so we can exit
       // before encountering any syntactic surprises.
       if (binding->key()->str() == "ninja_required_version") {
@@ -165,7 +165,7 @@ bool ManifestParser::Parse(const string& filename, const string& input,
 bool ManifestParser::ParsePool(string* err) {
   auto node = GetPool(*compiled_, next_node_);
   auto name = node->name()->str();
-  auto depth_str = Evaluate(env_, *node->depth());
+  auto depth_str = Evaluate(env_.get(), *node->depth());
   auto depth = (int)strtol(depth_str.c_str(), nullptr, 10);
 
   if (state_->LookupPool(name) != nullptr)
@@ -200,7 +200,7 @@ bool ManifestParser::ParseDefault(string* err) {
   auto defaults = node->default_();
   for(size_t i = 0; i < defaults->size(); ++i) {
     auto def = defaults->Get(i);
-    auto path = Evaluate(env_, *def);
+    auto path = Evaluate(env_.get(), *def);
     if (path.empty())
       return lexer_.Error("empty path", err, node->default_positions()->Get(i));
     uint64_t slash_bits;  // Unused because this only does lookup.
@@ -228,9 +228,9 @@ bool ManifestParser::ParseEdge(string* err) {
     return lexer_.Error("unknown build rule '" + node->name()->str() + "'", err, node->rule_position());
 
   // Bindings on edges are rare, so allocate per-edge envs only when needed.
-  BindingEnv* env = bindings->size() != 0 ? new BindingEnv(env_) : env_;
+  auto env = bindings->size() != 0 ? std::make_shared<BindingEnv>(env_) : env_;
   for(const auto& binding: *bindings) {
-    env->AddBinding(binding->key()->c_str(), Evaluate(env, *binding->value()));
+    env->AddBinding(binding->key()->c_str(), Evaluate(env.get(), *binding->value()));
   }
 
   Edge* edge = state_->AddEdge(rule);
@@ -246,7 +246,7 @@ bool ManifestParser::ParseEdge(string* err) {
 
   edge->outputs_.reserve(outs.size());
   for (size_t i = 0, e = outs.size(); i != e; ++i) {
-    string path = outs[i].Evaluate(env);
+    string path = outs[i].Evaluate(env.get());
     if (path.empty())
       return lexer_.Error("empty path", err, node->final_position());
     uint64_t slash_bits;
@@ -279,7 +279,7 @@ bool ManifestParser::ParseEdge(string* err) {
 
   edge->inputs_.reserve(ins.size());
   for (auto & in : ins) {
-    string path = in.Evaluate(env);
+    string path = in.Evaluate(env.get());
     if (path.empty())
       return lexer_.Error("empty path", err, node->final_position());
     uint64_t slash_bits;
@@ -291,7 +291,7 @@ bool ManifestParser::ParseEdge(string* err) {
 
   edge->validations_.reserve(validations.size());
   for (auto & validation : validations) {
-    string path = validation.Evaluate(env);
+    string path = validation.Evaluate(env.get());
     if (path.empty())
       return lexer_.Error("empty path", err, node->final_position());
     uint64_t slash_bits;
@@ -338,11 +338,11 @@ bool ManifestParser::ParseEdge(string* err) {
 
 bool ManifestParser::ParseFileInclude(string* err) {
   auto node = GetInclude(*compiled_, next_node_);
-  string path = Evaluate(env_, *node->path());
+  string path = Evaluate(env_.get(), *node->path());
 
   ManifestParser subparser(state_, file_reader_, options_);
   if (node->new_scope()) {
-    subparser.env_ = new BindingEnv(env_);
+    subparser.env_ = std::make_shared<BindingEnv>(env_);
   } else {
     subparser.env_ = env_;
   }

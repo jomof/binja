@@ -58,7 +58,7 @@ public: // TODO make private again
 
 /// An invocable build command and associated metadata (description, etc.).
 struct Rule {
-  explicit Rule(const std::string& name) : name_(name) {}
+  explicit Rule(const std::string& name) : name_(name) { }
 
   const std::string& name() const { return name_; }
 
@@ -81,10 +81,10 @@ struct Rule {
 /// An Env which contains a mapping of variables to values
 /// as well as a pointer to a parent scope.
 struct BindingEnv : public Env {
-  BindingEnv() : parent_(NULL) {}
-  explicit BindingEnv(BindingEnv* parent) : parent_(parent) {}
+  BindingEnv() : parent_(nullptr) {}
+  explicit BindingEnv(std::shared_ptr<BindingEnv> parent) : parent_(parent) {}
 
-  virtual ~BindingEnv() {}
+  virtual ~BindingEnv();
   virtual std::string LookupVariable(const std::string& var);
 
   void AddRule(const Rule* rule);
@@ -105,7 +105,7 @@ struct BindingEnv : public Env {
 private:
   std::map<std::string, std::string> bindings_;
   std::map<std::string, const Rule*> rules_;
-  BindingEnv* parent_;
+  std::shared_ptr<BindingEnv> parent_;
 };
 
 #endif  // NINJA_EVAL_ENV_H_

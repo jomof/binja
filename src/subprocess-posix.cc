@@ -227,6 +227,10 @@ SubprocessSet::SubprocessSet() {
 
 SubprocessSet::~SubprocessSet() {
   Clear();
+  while(!running_.empty()) {
+    delete running_.back();
+    running_.pop_back();
+  }
 
   if (sigaction(SIGINT, &old_int_act_, 0) < 0)
     Fatal("sigaction: %s", strerror(errno));
@@ -361,8 +365,7 @@ void SubprocessSet::Clear() {
     // the interruption signal (i.e. SIGINT or SIGTERM) at the same time as us.
     if (!(*i)->use_console_)
       kill(-(*i)->pid_, interrupted_);
-  for (vector<Subprocess*>::iterator i = running_.begin();
-       i != running_.end(); ++i)
-    delete *i;
+  for (auto & i : running_)
+    delete i;
   running_.clear();
 }

@@ -661,7 +661,7 @@ int NinjaMain::ToolRules(const Options* options, int argc, char* argv[]) {
   // Print rules
 
   typedef map<string, const Rule*> Rules;
-  const Rules& rules = state_.bindings_.GetRules();
+  const Rules& rules = state_.bindings_->GetRules();
   for (Rules::const_iterator i = rules.begin(); i != rules.end(); ++i) {
     printf("%s", i->first.c_str());
     if (print_description) {
@@ -1318,7 +1318,7 @@ void NinjaMain::DumpMetrics() {
 }
 
 bool NinjaMain::EnsureBuildDirExists() {
-  build_dir_ = state_.bindings_.LookupVariable("builddir");
+  build_dir_ = state_.bindings_->LookupVariable("builddir");
   if (!build_dir_.empty() && !config_.dry_run) {
     if (!disk_interface_.MakeDirs(build_dir_ + "/.") && errno != EEXIST) {
       Error("creating build directory %s: %s",

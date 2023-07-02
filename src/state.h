@@ -95,6 +95,7 @@ struct State {
   static const Rule kPhonyRule;
 
   State();
+  ~State();
 
   void AddPool(Pool* pool);
   Pool* LookupPool(const std::string& pool_name);
@@ -132,7 +133,7 @@ struct State {
   /// All the edges of the graph.
   std::vector<Edge*> edges_;
 
-  BindingEnv bindings_;
+  std::shared_ptr<BindingEnv> bindings_;
   std::vector<Node*> defaults_;
 };
 

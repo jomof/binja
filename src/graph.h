@@ -205,7 +205,7 @@ struct Edge {
   std::vector<Node*> outputs_;
   std::vector<Node*> validations_;
   Node* dyndep_;
-  BindingEnv* env_;
+  std::shared_ptr<BindingEnv> env_;
   VisitMark mark_;
   size_t id_;
   bool outputs_ready_;

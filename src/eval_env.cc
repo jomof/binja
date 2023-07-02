@@ -18,6 +18,14 @@
 
 using namespace std;
 
+BindingEnv::~BindingEnv() {
+  for(auto rule : rules_) {
+    if (rule.second->name() != "phony")
+      delete rule.second;
+  }
+  rules_.clear();
+}
+
 string BindingEnv::LookupVariable(const string& var) {
   map<string, string>::iterator i = bindings_.find(var);
   if (i != bindings_.end())
