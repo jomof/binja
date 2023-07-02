@@ -793,7 +793,8 @@ TEST_F(ParserTest, Errors) {
     string err;
     EXPECT_FALSE(parser.ParseTest("pool foo\n"
                                   "  depth = 4\n"
-                                  "pool foo\n", &err));
+                                  "pool foo\n"
+                                  "  depth = 1\n", &err));
     EXPECT_EQ("input:3: duplicate pool 'foo'\n"
               "pool foo\n"
               "        ^ near here"

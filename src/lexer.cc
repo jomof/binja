@@ -22,17 +22,22 @@
 
 using namespace std;
 
-bool Lexer::Error(const string& message, string* err) {
+bool Lexer::Error(const string& message, string* err, long offset) {
   // Compute line/column.
+  const char* last_token = last_token_;
+  if (offset >= 0) {
+    last_token = input_.str_ + offset;
+  }
+
   int line = 1;
   const char* line_start = input_.str_;
-  for (const char* p = input_.str_; p < last_token_; ++p) {
+  for (const char* p = input_.str_; p < last_token; ++p) {
     if (*p == '\n') {
       ++line;
       line_start = p + 1;
     }
   }
-  int col = last_token_ ? (int)(last_token_ - line_start) : 0;
+  int col = last_token ? (int)(last_token - line_start) : 0;
 
   char buf[1024];
   snprintf(buf, sizeof(buf), "%s:%d: ", filename_.AsString().c_str(), line);
@@ -70,6 +75,15 @@ void Lexer::Start(StringPiece filename, StringPiece input) {
   input_ = input;
   ofs_ = input_.str_;
   last_token_ = NULL;
+}
+
+uint64_t  Lexer::GetPosition() {
+  return last_token_ - input_.begin();
+}
+
+void Lexer::SetPosition(uint64_t offset) {
+ last_token_ = input_.begin() + offset;
+ ofs_ = last_token_;
 }
 
 const char* Lexer::TokenName(Token t) {

@@ -88,7 +88,10 @@ struct Lexer {
   }
 
   /// Construct an error message with context.
-  bool Error(const std::string& message, std::string* err);
+  bool Error(const std::string& message, std::string* err, long offset = -1);
+
+  uint64_t GetPosition();
+  void SetPosition(uint64_t offset);
 
 private:
   /// Skip past whitespace (called after each read token/ident/etc.).

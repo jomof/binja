@@ -24,22 +24,20 @@ struct EvalString;
 
 /// Parses .ninja files.
 struct ManifestToBinParser : public Parser {
-  ManifestToBinParser(State* state, FileReader* file_reader,
-                 ManifestParserOptions options = ManifestParserOptions());
+  ManifestToBinParser(State* state, FileReader* file_reader);
   virtual ~ManifestToBinParser() { }
 
   /// Parse a text string of input.  Used by tests.
   bool ParseTest(const std::string& input, std::string* err) {
-    quiet_ = true;
     return Parse("input", input, err);
   }
 
-  binja::CompiledBuildNinja * compiled_ = 0;
+
 
   /// Parse a file, given its contents as a string.
   bool Parse(const std::string& filename, const std::string& input,
              std::string* err);
-private:
+public:
   /// Parse various statement types.
   bool ParsePool(std::string* err);
   bool ParseRule(std::string* err);
@@ -54,16 +52,18 @@ private:
   flatbuffers::Offset<binja::ParseEvalString> CreateParseEvalString(const EvalString & eval_string);
   flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<binja::ParseEvalString>>> CreateParseEvalStringVector(const std::vector<EvalString> & eval_strings);
 
+  BindingEnv* env_;
   flatbuffers::FlatBufferBuilder fb_;
   std::vector<flatbuffers::Offset<binja::ParseNode>> nodes_;
   std::vector<flatbuffers::Offset<binja::ParseRule>> rules_;
-  std::vector<flatbuffers::Offset<binja::ParseEdge>> edges_;
+  std::vector<flatbuffers::Offset<binja::ParseBuild>> builds_;
   std::vector<flatbuffers::Offset<binja::ParseDefault>> defaults_;
   std::vector<flatbuffers::Offset<binja::ParsePool>> pools_;
   std::vector<flatbuffers::Offset<binja::ParseBinding>> bindings_;
   std::vector<flatbuffers::Offset<binja::ParseInclude>> includes_;
-  ManifestParserOptions options_;
-  bool quiet_;
+  unsigned int next_node_ = 0;
+
+  const binja::CompiledBuildNinja * GetCompiled();
 };
 
 #endif  // NINJA_MANIFEST_TO_BIN_PARSER_H_

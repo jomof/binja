@@ -4,7 +4,7 @@ package binja;
 message CompiledBuildNinja {
     repeated ParseNode parse_node = 1;
     repeated ParseRule rule = 2;
-    repeated ParseEdge edge = 3;
+    repeated ParseBuild build = 3;
     repeated ParseDefault default = 4;
     repeated ParsePool pool = 5;
     repeated ParseBinding binding = 6;
@@ -14,14 +14,14 @@ message CompiledBuildNinja {
 message ParseNode {
   enum Type {
     RULE = 0;
-    EDGE = 1;
+    BUILD = 1;
     DEFAULT = 2;
     POOL = 3;
     BINDING = 4;
     INCLUDE = 5;
   }
   Type type = 1;
-  int64 table_offset = 2;
+  uint64 table_offset = 2;
 }
 
 message ParseStringPiece {
@@ -39,35 +39,46 @@ message ParseEvalString {
 
 message ParseBinding {
   string key = 1;
-  ParseEvalString depth = 2;
+  ParseEvalString value = 2;
+  uint64 final_position = 3;
 }
 
 message ParseRule {
   string name = 1;
   repeated ParseBinding binding = 2;
+  uint64 rule_position = 3;
+  uint64 final_position = 4;
 }
 
-message ParseEdge {
+message ParseBuild {
   string name = 1;
   repeated ParseEvalString out = 2;
-  int64 implicit_out_count = 3;
+  int32 implicit_out_count = 3;
   repeated ParseEvalString in = 4;
-  int64 implicit_in_count = 5;
-  int64 order_only_in_count = 6;
+  int32 implicit_in_count = 5;
+  int32 order_only_in_count = 6;
   repeated ParseEvalString validations = 7;
-  repeated ParseEvalString bindings = 8;
+  repeated ParseBinding bindings = 8;
+  uint64 rule_position = 9;
+  uint64 final_position = 10;
 }
 
 message ParsePool {
   string name = 1;
   ParseEvalString depth = 2;
+  uint64 pool_position = 3;
+  uint64 depth_position = 4;
+  uint64 final_position = 5;
 }
 
 message ParseDefault {
   repeated ParseEvalString default = 1;
+  repeated uint64 default_positions = 2;
+  uint64 final_position = 3;
 }
 
 message ParseInclude {
   bool new_scope = 1;
   ParseEvalString path = 2;
+  uint64 final_position = 3;
 }

@@ -21,6 +21,7 @@
 struct BindingEnv;
 struct EvalString;
 struct ManifestToBinParser;
+namespace binja { struct CompiledBuildNinja; }
 
 /// Parses .ninja files.
 struct ManifestParser : public Parser {
@@ -42,17 +43,18 @@ private:
   /// Parse various statement types.
   bool ParsePool(std::string* err);
   bool ParseRule(std::string* err);
-  bool ParseLet(std::string* key, EvalString* val, std::string* err);
   bool ParseEdge(std::string* err);
   bool ParseDefault(std::string* err);
 
   /// Parse either a 'subninja' or 'include' line.
-  bool ParseFileInclude(bool new_scope, std::string* err);
+  bool ParseFileInclude(std::string* err);
 
   BindingEnv* env_;
   ManifestParserOptions options_;
   ManifestToBinParser* m2b_ = 0;
   bool quiet_;
+  unsigned int next_node_ = 0;
+  const binja::CompiledBuildNinja * compiled_ = 0;
 };
 
 #endif  // NINJA_MANIFEST_PARSER_H_

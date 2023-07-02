@@ -49,7 +49,7 @@ struct EvalString {
   /// for use in tests.
   std::string Serialize() const;
 
-private:
+public: // TODO make private again
   friend struct ManifestToBinParser;
   enum TokenType { RAW, SPECIAL };
   typedef std::vector<std::pair<std::string, TokenType> > TokenList;

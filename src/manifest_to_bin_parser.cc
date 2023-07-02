@@ -27,24 +27,18 @@
 
 using namespace std;
 
-ManifestToBinParser::ManifestToBinParser(State* state, FileReader* file_reader,
-                               ManifestParserOptions options)
-    : Parser(state, file_reader),
-      options_(options), quiet_(false) {
+ManifestToBinParser::ManifestToBinParser(State* state, FileReader* file_reader)
+    : Parser(state, file_reader) {
+  env_ = &state->bindings_;
 }
 
 bool ManifestToBinParser::Parse(const string& filename, const string& input,
                            string* err) {
-
-//  flatbuffers::FlatBufferBuilder builder;
-//  auto name = builder.CreateSharedString("bob");
-//  auto person = binja::CreatePerson(builder, name);
-//  builder.Finish(person);
-
   lexer_.Start(filename, input);
 
   for (;;) {
     Lexer::Token token = lexer_.ReadToken();
+    ++next_node_;
     switch (token) {
     case Lexer::POOL:
       if (!ParsePool(err))
@@ -68,15 +62,18 @@ bool ManifestToBinParser::Parse(const string& filename, const string& input,
       EvalString let_value;
       if (!ParseLet(&name, &let_value, err))
         return false;
+      ++next_node_;
+
       nodes_.push_back(binja::CreateParseNode(
           fb_,
-          binja::ParseNode_::Type_RULE,
+          binja::ParseNode_::Type_BINDING,
           bindings_.size()
           ));
       bindings_.push_back(binja::CreateParseBinding(
           fb_,
           fb_.CreateSharedString(name),
-          CreateParseEvalString(let_value)
+          CreateParseEvalString(let_value),
+          lexer_.GetPosition()
           ));
       break;
     }
@@ -92,16 +89,24 @@ bool ManifestToBinParser::Parse(const string& filename, const string& input,
       return lexer_.Error(lexer_.DescribeLastError(), err);
     }
     case Lexer::TEOF: {
-      fb_.Finish(binja::CreateCompiledBuildNinja(
-          fb_,
-          fb_.CreateVector(nodes_),
-          fb_.CreateVector(rules_),
-          fb_.CreateVector(edges_),
-          fb_.CreateVector(defaults_),
-          fb_.CreateVector(pools_),
-          fb_.CreateVector(bindings_),
-          fb_.CreateVector(includes_)));
-      fb_.Finished();
+//      nodes_.push_back(binja::CreateParseNode(
+//          fb_,
+//          binja::ParseNode_::Type_END_OF_FILE,
+//          0
+//          ));
+//      fb_.Finish(binja::CreateCompiledBuildNinja(
+//          fb_,
+//          fb_.CreateVector(nodes_),
+//          fb_.CreateVector(rules_),
+//          fb_.CreateVector(builds_),
+//          fb_.CreateVector(defaults_),
+//          fb_.CreateVector(pools_),
+//          fb_.CreateVector(bindings_),
+//          fb_.CreateVector(includes_)));
+//      compiled_ = flatbuffers::GetRoot<binja::CompiledBuildNinja>(fb_.GetBufferPointer());
+    //  auto x = (compiled_->parse_node())->Get(0);
+
+      //throw "FINISHED";
       //auto ptr = fb_.GetBufferPointer();
       return true;
     }
@@ -115,6 +120,19 @@ bool ManifestToBinParser::Parse(const string& filename, const string& input,
   return false;  // not reached
 }
 
+const binja::CompiledBuildNinja * ManifestToBinParser::GetCompiled() {
+  auto offset = binja::CreateCompiledBuildNinja(
+      fb_,
+      fb_.CreateVector(nodes_),
+      fb_.CreateVector(rules_),
+      fb_.CreateVector(builds_),
+      fb_.CreateVector(defaults_),
+      fb_.CreateVector(pools_),
+      fb_.CreateVector(bindings_),
+      fb_.CreateVector(includes_));
+  return flatbuffers::GetTemporaryPointer<binja::CompiledBuildNinja>(fb_, offset);
+}
+
 
 bool ManifestToBinParser::ParsePool(string* err) {
   string name;
@@ -124,17 +142,24 @@ bool ManifestToBinParser::ParsePool(string* err) {
   if (!ExpectToken(Lexer::NEWLINE, err))
     return false;
 
-  if (state_->LookupPool(name) != NULL)
-    return lexer_.Error("duplicate pool '" + name + "'", err);
+  long pool_position = lexer_.GetPosition();
 
-  EvalString depth_string;
+  EvalString depth_value;
+  long depth_line = -1;
 
   while (lexer_.PeekToken(Lexer::INDENT)) {
     string key;
-    EvalString value;
-    if (!ParseLet(&key, &depth_string, err))
+    if (!ParseLet(&key, &depth_value, err))
       return false;
+
+    if (key != "depth") {
+      return lexer_.Error("unexpected variable '" + key + "'", err);
+    }
+    depth_line = lexer_.GetPosition();
   }
+
+  if (depth_line < 0)
+    return lexer_.Error("expected 'depth =' line", err);
 
   nodes_.push_back(binja::CreateParseNode(
       fb_,
@@ -144,9 +169,11 @@ bool ManifestToBinParser::ParsePool(string* err) {
   pools_.push_back(binja::CreateParsePool(
       fb_,
       fb_.CreateSharedString(name),
-      CreateParseEvalString(depth_string)
+      CreateParseEvalString(depth_value),
+      pool_position,
+      depth_line,
+      lexer_.GetPosition()
       ));
-
   return true;
 }
 
@@ -158,12 +185,21 @@ bool ManifestToBinParser::ParseRule(string* err) {
   if (!ExpectToken(Lexer::NEWLINE, err))
     return false;
 
+  auto pool_position = lexer_.GetPosition();
   vector<flatbuffers::Offset<binja::ParseBinding>> bindings;
+  bool saw_command = false;
+  bool saw_rspfile = false;
+  bool saw_rspfile_content = false;
+
   while (lexer_.PeekToken(Lexer::INDENT)) {
     string key;
     EvalString value;
     if (!ParseLet(&key, &value, err))
       return false;
+
+    if (key == "command") saw_command = true;
+    if (key == "rspfile") saw_rspfile = true;
+    if (key == "rspfile_content") saw_rspfile_content = true;
 
     if (Rule::IsReservedBinding(key)) {
       bindings.push_back(binja::CreateParseBinding(
@@ -177,16 +213,26 @@ bool ManifestToBinParser::ParseRule(string* err) {
     }
   }
 
+  if (saw_rspfile != saw_rspfile_content) {
+    return lexer_.Error("rspfile and rspfile_content need to be "
+        "both specified", err);
+  }
+
+  if (!saw_command)
+    return lexer_.Error("expected 'command =' line", err);
+
   nodes_.push_back(binja::CreateParseNode(
       fb_,
       binja::ParseNode_::Type_RULE,
       rules_.size()
       ));
-  binja::CreateParseRule(
+  rules_.push_back(binja::CreateParseRule(
       fb_,
       fb_.CreateSharedString(name),
-      fb_.CreateVector(bindings)
-      );
+      fb_.CreateVector(bindings),
+      pool_position,
+      lexer_.GetPosition()
+      ));
   return true;
 }
 
@@ -208,11 +254,13 @@ bool ManifestToBinParser::ParseDefault(string* err) {
     return lexer_.Error("expected target name", err);
 
   vector<EvalString> defaults;
+  vector<uint64_t> defaults_positions;
   do {
     defaults.push_back(eval);
     eval.Clear();
     if (!lexer_.ReadPath(&eval, err))
       return false;
+    defaults_positions.push_back(lexer_.GetPosition());
   } while (!eval.empty());
 
   auto result = ExpectToken(Lexer::NEWLINE, err);
@@ -224,14 +272,18 @@ bool ManifestToBinParser::ParseDefault(string* err) {
         ));
     defaults_.push_back(binja::CreateParseDefault(
         fb_,
-        CreateParseEvalStringVector(defaults)
+        CreateParseEvalStringVector(defaults),
+        fb_.CreateVector(defaults_positions),
+        lexer_.GetPosition()
         ));
   }
   return result;
 }
 
 bool ManifestToBinParser::ParseEdge(string* err) {
-  vector<EvalString> ins, outs, validations, bindings;
+  vector<EvalString> ins, outs, validations;
+  vector<flatbuffers::Offset<binja::ParseBinding>> bindings;
+
 
   {
     EvalString out;
@@ -269,6 +321,8 @@ bool ManifestToBinParser::ParseEdge(string* err) {
   string rule_name;
   if (!lexer_.ReadIdent(&rule_name))
     return lexer_.Error("expected build command name", err);
+
+  auto rule_position = lexer_.GetPosition();
 
   for (;;) {
     // XXX should we require one path here?
@@ -320,6 +374,8 @@ bool ManifestToBinParser::ParseEdge(string* err) {
     }
   }
 
+
+
   if (!ExpectToken(Lexer::NEWLINE, err))
     return false;
 
@@ -330,16 +386,20 @@ bool ManifestToBinParser::ParseEdge(string* err) {
     EvalString val;
     if (!ParseLet(&key, &val, err))
       return false;
-    bindings.push_back(val);
+    bindings.push_back(binja::CreateParseBinding(
+        fb_,
+        fb_.CreateSharedString(key),
+        CreateParseEvalString(val),
+        lexer_.GetPosition()));
     has_indent_token = lexer_.PeekToken(Lexer::INDENT);
   }
 
   nodes_.push_back(binja::CreateParseNode(
       fb_,
-      binja::ParseNode_::Type_RULE,
-      edges_.size()
+      binja::ParseNode_::Type_BUILD,
+      builds_.size()
       ));
-  edges_.push_back(binja::CreateParseEdge(
+  builds_.push_back(binja::CreateParseBuild(
       fb_,
       fb_.CreateSharedString(rule_name),
       CreateParseEvalStringVector(outs),
@@ -348,7 +408,9 @@ bool ManifestToBinParser::ParseEdge(string* err) {
       implicit,
       order_only,
       CreateParseEvalStringVector(validations),
-      CreateParseEvalStringVector(bindings)
+      fb_.CreateVector(bindings),
+      rule_position,
+      lexer_.GetPosition()
       ));
 
   return true;
@@ -359,6 +421,9 @@ bool ManifestToBinParser::ParseFileInclude(bool new_scope, string* err) {
   if (!lexer_.ReadPath(&eval, err))
     return false;
 
+  if (!ExpectToken(Lexer::NEWLINE, err))
+    return false;
+
   nodes_.push_back(binja::CreateParseNode(
       fb_,
       binja::ParseNode_::Type_INCLUDE,
@@ -367,7 +432,8 @@ bool ManifestToBinParser::ParseFileInclude(bool new_scope, string* err) {
   includes_.push_back(binja::CreateParseInclude(
       fb_,
       new_scope,
-      CreateParseEvalString(eval)
+      CreateParseEvalString(eval),
+      lexer_.GetPosition()
       ));
   return true;
 }
@@ -388,7 +454,8 @@ flatbuffers::Offset<binja::ParseEvalString> ManifestToBinParser::CreateParseEval
 flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<binja::ParseEvalString>>> ManifestToBinParser::CreateParseEvalStringVector(const vector<EvalString> & eval_strings) {
   vector<flatbuffers::Offset<binja::ParseEvalString>> strings;
   for (const auto& eval_string : eval_strings) {
-    strings.push_back(CreateParseEvalString(eval_string));
+    auto parse_eval_string = CreateParseEvalString(eval_string);
+    strings.push_back(parse_eval_string);
   }
   return fb_.CreateVector(strings);
 }
