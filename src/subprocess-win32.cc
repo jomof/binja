@@ -24,8 +24,8 @@
 using namespace std;
 
 Subprocess::Subprocess(bool use_console) : child_(NULL) , overlapped_(),
-                                           is_reading_(false),
-                                           use_console_(use_console) {
+      is_reading_(false),
+      use_console_(use_console) {
 }
 
 Subprocess::~Subprocess() {
@@ -200,7 +200,7 @@ ExitStatus Subprocess::Finish() {
 
   return exit_code == 0              ? ExitSuccess :
          exit_code == CONTROL_C_EXIT ? ExitInterrupted :
-                                       ExitFailure;
+                                     ExitFailure;
 }
 
 bool Subprocess::Done() const {
@@ -238,11 +238,10 @@ BOOL WINAPI SubprocessSet::NotifyInterrupted(DWORD dwCtrlType) {
   return FALSE;
 }
 
-Subprocess *SubprocessSet::Add(const string& command, bool use_console) {
-  Subprocess *subprocess = new Subprocess(use_console);
+std::shared_ptr<Subprocess> SubprocessSet::Add(const string& command, bool use_console) {
+  auto subprocess = std::shared_ptr<Subprocess>(new Subprocess(use_console));
   if (!subprocess->Start(this, command)) {
-    delete subprocess;
-    return 0;
+    return nullptr;
   }
   if (subprocess->child_)
     running_.push_back(subprocess);
@@ -253,7 +252,7 @@ Subprocess *SubprocessSet::Add(const string& command, bool use_console) {
 
 bool SubprocessSet::DoWork() {
   DWORD bytes_read;
-  Subprocess* subproc;
+  std::shared_ptr<Subprocess> subproc;
   OVERLAPPED* overlapped;
 
   if (!GetQueuedCompletionStatus(ioport_, &bytes_read, (PULONG_PTR)&subproc,
@@ -263,13 +262,13 @@ bool SubprocessSet::DoWork() {
   }
 
   if (!subproc) // A NULL subproc indicates that we were interrupted and is
-                // delivered by NotifyInterrupted above.
+                 // delivered by NotifyInterrupted above.
     return true;
 
   subproc->OnPipeReady();
 
   if (subproc->Done()) {
-    vector<Subprocess*>::iterator end =
+    auto end =
         remove(running_.begin(), running_.end(), subproc);
     if (running_.end() != end) {
       finished_.push(subproc);
@@ -280,16 +279,16 @@ bool SubprocessSet::DoWork() {
   return false;
 }
 
-Subprocess* SubprocessSet::NextFinished() {
+std::shared_ptr<Subprocess> SubprocessSet::NextFinished() {
   if (finished_.empty())
-    return NULL;
-  Subprocess* subproc = finished_.front();
+    return nullptr;
+  auto subproc = finished_.front();
   finished_.pop();
   return subproc;
 }
 
 void SubprocessSet::Clear() {
-  for (vector<Subprocess*>::iterator i = running_.begin();
+  for (auto i = running_.begin();
        i != running_.end(); ++i) {
     // Since the foreground process is in our process group, it will receive a
     // CTRL_C_EVENT or CTRL_BREAK_EVENT at the same time as us.
@@ -300,8 +299,5 @@ void SubprocessSet::Clear() {
       }
     }
   }
-  for (vector<Subprocess*>::iterator i = running_.begin();
-       i != running_.end(); ++i)
-    delete *i;
   running_.clear();
 }
