@@ -263,8 +263,6 @@ bool SubprocessSet::DoWork() {
   }
 
   interrupted_ = 0;
-  auto xxx = &fds.front();
-  auto yyy = &old_mask_;
   int ret = ppoll(&fds.front(), nfds, NULL, &old_mask_);
   if (ret == -1) {
     if (errno != EINTR) {
