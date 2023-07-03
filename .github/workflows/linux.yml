@@ -22,7 +22,7 @@ jobs:
     - name: Install dependencies
       run: |
         apt update
-        apt install -y python3-pytest ninja-build clang-tidy python3-pip clang libasan clang-analyzer 7z
+        apt install -y python3-pytest ninja-build clang-tidy python3-pip clang clang-tools 7z
         pip3 install cmake==3.17.*
 #     - name: Install dependencies
 #       run: |
