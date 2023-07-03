@@ -458,7 +458,7 @@ struct RealCommandRunner : public CommandRunner {
 
   const BuildConfig& config_;
   SubprocessSet subprocs_;
-  map<std::shared_ptr<Subprocess>, Edge*> subproc_to_edge_;
+  map<Subprocess*, Edge*> subproc_to_edge_;
 };
 
 vector<Edge*> RealCommandRunner::GetActiveEdges() {
@@ -504,7 +504,7 @@ bool RealCommandRunner::WaitForCommand(Result* result) {
   result->status = subproc->Finish();
   result->output = subproc->GetOutput();
 
-  auto e = subproc_to_edge_.find(subproc);
+  auto e = subproc_to_edge_.find(subproc.get());
   result->edge = e->second;
   subproc_to_edge_.erase(e);
 

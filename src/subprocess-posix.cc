@@ -14,13 +14,12 @@
 
 #include "subprocess.h"
 
-#include <sys/select.h>
-#include <assert.h>
-#include <errno.h>
+#include <cassert>
+#include <cerrno>
 #include <fcntl.h>
 #include <unistd.h>
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 #include <sys/wait.h>
 #include <spawn.h>
 #include <memory>
@@ -252,9 +251,8 @@ bool SubprocessSet::DoWork() {
   vector<pollfd> fds;
   nfds_t nfds = 0;
 
-  for (auto i = running_.begin();
-       i != running_.end(); ++i) {
-    int fd = (*i)->fd_;
+  for (auto & i : running_) {
+    int fd = i->fd_;
     if (fd < 0)
       continue;
     pollfd pfd = { fd, POLLIN | POLLPRI, 0 };
@@ -263,7 +261,7 @@ bool SubprocessSet::DoWork() {
   }
 
   interrupted_ = 0;
-  int ret = ppoll(&fds.front(), nfds, NULL, &old_mask_);
+  int ret = ppoll(&fds.front(), nfds, nullptr, &old_mask_);
   if (ret == -1) {
     if (errno != EINTR) {
       perror("ninja: ppoll");
@@ -347,18 +345,17 @@ bool SubprocessSet::DoWork() {
 
 std::shared_ptr<Subprocess> SubprocessSet::NextFinished() {
   if (finished_.empty())
-    return NULL;
+    return nullptr;
   auto subproc = finished_.front();
   finished_.pop();
   return subproc;
 }
 
 void SubprocessSet::Clear() {
-  for (auto i = running_.begin();
-       i != running_.end(); ++i)
+  for (auto & i : running_)
     // Since the foreground process is in our process group, it will receive
     // the interruption signal (i.e. SIGINT or SIGTERM) at the same time as us.
-    if (!(*i)->use_console_)
-      kill(-(*i)->pid_, interrupted_);
+    if (!i->use_console_)
+      kill(-i->pid_, interrupted_);
   running_.clear();
 }

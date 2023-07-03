@@ -23,7 +23,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #else
-#include <signal.h>
+#include <csignal>
 #endif
 
 // ppoll() exists on FreeBSD, but only on newer versions.
@@ -47,16 +47,17 @@ struct Subprocess {
   /// the process was interrupted, ExitFailure if it otherwise failed.
   ExitStatus Finish();
 
-  bool Done() const;
+  [[nodiscard]] bool Done() const;
 
-  const std::string& GetOutput() const;
+  [[nodiscard]] const std::string& GetOutput() const;
 
  private:
-  Subprocess(bool use_console);
+  explicit Subprocess(bool use_console);
   bool Start(struct SubprocessSet* set, const std::string& command);
   void OnPipeReady();
 
   std::string buf_;
+  std::string debug_;
 
 #ifdef _WIN32
   /// Set up pipe_ as the parent-side pipe of the subprocess; return the
