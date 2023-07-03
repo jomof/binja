@@ -24,16 +24,6 @@ jobs:
         apt update
         apt install -y python3-pytest ninja-build clang-tidy python3-pip clang clang-tools p7zip-full
         pip3 install cmake==3.17.*
-#     - name: Install dependencies
-#       run: |
-#         curl -L -O https://github.com/Kitware/CMake/releases/download/v3.16.4/cmake-3.16.4-Linux-x86_64.sh
-#         chmod +x cmake-3.16.4-Linux-x86_64.sh
-#         ./cmake-3.16.4-Linux-x86_64.sh --skip-license --prefix=/usr/local
-#         curl -L -O https://www.mirrorservice.org/sites/dl.fedoraproject.org/pub/epel/7/x86_64/Packages/p/p7zip-16.02-20.el7.x86_64.rpm
-#         curl -L -O https://www.mirrorservice.org/sites/dl.fedoraproject.org/pub/epel/7/x86_64/Packages/p/p7zip-plugins-16.02-20.el7.x86_64.rpm
-#         rpm -U --quiet p7zip-16.02-20.el7.x86_64.rpm
-#         rpm -U --quiet p7zip-plugins-16.02-20.el7.x86_64.rpm
-#         yum install -y make gcc-c++ libasan clang-analyzer
 
     - name: Build debug ninja
       shell: bash
@@ -51,7 +41,7 @@ jobs:
     - name: Build release ninja
       shell: bash
       run: |
-        cmake -DCMAKE_BUILD_TYPE=Release -B release-build -DNINJA_BUILD_FLATC=ON
+        cmake -DCMAKE_BUILD_TYPE=Release -B release-build -DNINJA_JUST_BUILD_FLATC=ON
         cmake --build release-build --parallel --config Release 
         strip release-build/ninja
 
