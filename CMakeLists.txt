@@ -15,6 +15,8 @@ if(POLICY CMP0135)
   cmake_policy(SET CMP0135 NEW)
 endif()
 
+set(CMAKE_CXX_STANDARD 17)
+
 # --- flatc
 if(NOT NINJA_BUILD_FLATC)
 	if(WIN32)
