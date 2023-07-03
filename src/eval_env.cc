@@ -12,62 +12,68 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <assert.h>
+#include <cassert>
 
 #include "eval_env.h"
 
 using namespace std;
 
 BindingEnv::~BindingEnv() {
-  for(auto rule : rules_) {
+  for(const auto& rule : rules_) {
     if (rule.second->name() != "phony")
       delete rule.second;
   }
   rules_.clear();
 }
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "misc-no-recursion"
 string BindingEnv::LookupVariable(const string& var) {
-  map<string, string>::iterator i = bindings_.find(var);
+  auto i = bindings_.find(var);
   if (i != bindings_.end())
     return i->second;
   if (parent_)
     return parent_->LookupVariable(var);
   return "";
 }
+#pragma clang diagnostic pop
 
 void BindingEnv::AddBinding(const string& key, const string& val) {
   bindings_[key] = val;
 }
 
 void BindingEnv::AddRule(const Rule* rule) {
-  assert(LookupRuleCurrentScope(rule->name()) == NULL);
+  assert(LookupRuleCurrentScope(rule->name()) == nullptr);
   rules_[rule->name()] = rule;
 }
 
 const Rule* BindingEnv::LookupRuleCurrentScope(const string& rule_name) {
-  map<string, const Rule*>::iterator i = rules_.find(rule_name);
+  auto i = rules_.find(rule_name);
   if (i == rules_.end())
-    return NULL;
+    return nullptr;
   return i->second;
 }
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "misc-no-recursion"
 const Rule* BindingEnv::LookupRule(const string& rule_name) {
-  map<string, const Rule*>::iterator i = rules_.find(rule_name);
+  auto i = rules_.find(rule_name);
   if (i != rules_.end())
     return i->second;
   if (parent_)
     return parent_->LookupRule(rule_name);
-  return NULL;
+  return nullptr;
 }
+#pragma clang diagnostic pop
 
 void Rule::AddBinding(const string& key, const EvalString& val) {
   bindings_[key] = val;
 }
 
 const EvalString* Rule::GetBinding(const string& key) const {
-  Bindings::const_iterator i = bindings_.find(key);
+  auto i = bindings_.find(key);
   if (i == bindings_.end())
-    return NULL;
+    return nullptr;
   return &i->second;
 }
 
@@ -93,7 +99,7 @@ const map<string, const Rule*>& BindingEnv::GetRules() const {
 string BindingEnv::LookupWithFallback(const string& var,
                                       const EvalString* eval,
                                       Env* env) {
-  map<string, string>::iterator i = bindings_.find(var);
+  auto i = bindings_.find(var);
   if (i != bindings_.end())
     return i->second;
 
@@ -108,11 +114,11 @@ string BindingEnv::LookupWithFallback(const string& var,
 
 string EvalString::Evaluate(Env* env) const {
   string result;
-  for (TokenList::const_iterator i = parsed_.begin(); i != parsed_.end(); ++i) {
-    if (i->second == RAW)
-      result.append(i->first);
+  for (const auto & i : parsed_) {
+    if (i.second == RAW)
+      result.append(i.first);
     else
-      result.append(env->LookupVariable(i->first));
+      result.append(env->LookupVariable(i.first));
   }
   return result;
 }
@@ -122,21 +128,20 @@ void EvalString::AddText(StringPiece text) {
   if (!parsed_.empty() && parsed_.back().second == RAW) {
     parsed_.back().first.append(text.str_, text.len_);
   } else {
-    parsed_.push_back(make_pair(text.AsString(), RAW));
+    parsed_.emplace_back(text.AsString(), RAW);
   }
 }
 void EvalString::AddSpecial(StringPiece text) {
-  parsed_.push_back(make_pair(text.AsString(), SPECIAL));
+  parsed_.emplace_back(text.AsString(), SPECIAL);
 }
 
 string EvalString::Serialize() const {
   string result;
-  for (TokenList::const_iterator i = parsed_.begin();
-       i != parsed_.end(); ++i) {
+  for (const auto & i : parsed_) {
     result.append("[");
-    if (i->second == SPECIAL)
+    if (i.second == SPECIAL)
       result.append("$");
-    result.append(i->first);
+    result.append(i.first);
     result.append("]");
   }
   return result;
@@ -144,12 +149,11 @@ string EvalString::Serialize() const {
 
 string EvalString::Unparse() const {
   string result;
-  for (TokenList::const_iterator i = parsed_.begin();
-       i != parsed_.end(); ++i) {
-    bool special = (i->second == SPECIAL);
+  for (const auto & i : parsed_) {
+    bool special = (i.second == SPECIAL);
     if (special)
       result.append("${");
-    result.append(i->first);
+    result.append(i.first);
     if (special)
       result.append("}");
   }

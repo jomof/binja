@@ -17,6 +17,7 @@
 
 #include <map>
 #include <string>
+#include <utility>
 #include <vector>
 #include <memory>
 #include "string_piece.h"
@@ -25,7 +26,7 @@ struct Rule;
 
 /// An interface for a scope for variable (e.g. "$foo") lookups.
 struct Env {
-  virtual ~Env() {}
+  virtual ~Env() = default;
   virtual std::string LookupVariable(const std::string& var) = 0;
 };
 
@@ -37,19 +38,19 @@ struct EvalString {
   std::string Evaluate(Env* env) const;
 
   /// @return The string with variables not expanded.
-  std::string Unparse() const;
+  [[nodiscard]] std::string Unparse() const;
 
   void Clear() { parsed_.clear(); }
-  bool empty() const { return parsed_.empty(); }
+  [[nodiscard]] bool empty() const { return parsed_.empty(); }
 
   void AddText(StringPiece text);
   void AddSpecial(StringPiece text);
 
   /// Construct a human-readable representation of the parsed state,
   /// for use in tests.
-  std::string Serialize() const;
+  [[nodiscard]] std::string Serialize() const;
 
-public: // TODO make private again
+private:
   friend struct ManifestToBinParser;
   enum TokenType { RAW, SPECIAL };
   typedef std::vector<std::pair<std::string, TokenType> > TokenList;
@@ -58,15 +59,15 @@ public: // TODO make private again
 
 /// An invocable build command and associated metadata (description, etc.).
 struct Rule {
-  explicit Rule(const std::string& name) : name_(name) { }
+  explicit Rule(std::string name) : name_(std::move(name)) { }
 
-  const std::string& name() const { return name_; }
+  [[nodiscard]] const std::string& name() const { return name_; }
 
   void AddBinding(const std::string& key, const EvalString& val);
 
   static bool IsReservedBinding(const std::string& var);
 
-  const EvalString* GetBinding(const std::string& key) const;
+  [[nodiscard]] const EvalString* GetBinding(const std::string& key) const;
 
  private:
   // Allow the parsers to reach into this object and fill out its fields.
@@ -82,15 +83,15 @@ struct Rule {
 /// as well as a pointer to a parent scope.
 struct BindingEnv : public Env {
   BindingEnv() : parent_(nullptr) {}
-  explicit BindingEnv(std::shared_ptr<BindingEnv> parent) : parent_(parent) {}
+  explicit BindingEnv(std::shared_ptr<BindingEnv> parent) : parent_(std::move(parent)) {}
 
-  virtual ~BindingEnv();
-  virtual std::string LookupVariable(const std::string& var);
+  ~BindingEnv() override;
+  std::string LookupVariable(const std::string& var) override;
 
   void AddRule(const Rule* rule);
   const Rule* LookupRule(const std::string& rule_name);
   const Rule* LookupRuleCurrentScope(const std::string& rule_name);
-  const std::map<std::string, const Rule*>& GetRules() const;
+  [[nodiscard]] const std::map<std::string, const Rule*>& GetRules() const;
 
   void AddBinding(const std::string& key, const std::string& val);
 
