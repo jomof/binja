@@ -305,7 +305,7 @@ bool SubprocessSet::DoWork() {
   int nfds = 0;
   FD_ZERO(&set);
 
-  for (vector<Subprocess*>::iterator i = running_.begin();
+  for (auto i = running_.begin();
        i != running_.end(); ++i) {
     int fd = (*i)->fd_;
     if (fd >= 0) {
@@ -329,7 +329,7 @@ bool SubprocessSet::DoWork() {
   if (IsInterrupted())
     return true;
 
-  for (vector<Subprocess*>::iterator i = running_.begin();
+  for (auto i = running_.begin();
        i != running_.end(); ) {
     int fd = (*i)->fd_;
     if (fd >= 0 && FD_ISSET(fd, &set)) {
