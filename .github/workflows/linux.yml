@@ -52,7 +52,7 @@ jobs:
       shell: bash
       run: |
         cmake -DCMAKE_BUILD_TYPE=Release -B release-build 
-        cmake --build release-build --parallel --config Release
+        cmake --build release-build --parallel --config Release -DNINJA_BUILD_FLATC=ON
         strip release-build/ninja
 
     - name: Test release ninja
