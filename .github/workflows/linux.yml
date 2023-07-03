@@ -21,8 +21,8 @@ jobs:
         skip: vendor
     - name: Install dependencies
       run: |
-        sudo apt update
-        sudo apt install -y python3-pytest ninja-build clang-tidy python3-pip clang libasan clang-analyzer 7z
+        apt update
+        apt install -y python3-pytest ninja-build clang-tidy python3-pip clang libasan clang-analyzer 7z
         pip3 install cmake==3.17.*
 #     - name: Install dependencies
 #       run: |
