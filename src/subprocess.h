@@ -47,9 +47,9 @@ struct Subprocess {
   /// the process was interrupted, ExitFailure if it otherwise failed.
   ExitStatus Finish();
 
-  [[nodiscard]] bool Done() const;
+  bool Done() const;
 
-  [[nodiscard]] const std::string& GetOutput() const;
+  const std::string& GetOutput() const;
 
  private:
   explicit Subprocess(bool use_console);

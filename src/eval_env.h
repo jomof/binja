@@ -38,17 +38,17 @@ struct EvalString {
   std::string Evaluate(Env* env) const;
 
   /// @return The string with variables not expanded.
-  [[nodiscard]] std::string Unparse() const;
+  std::string Unparse() const;
 
   void Clear() { parsed_.clear(); }
-  [[nodiscard]] bool empty() const { return parsed_.empty(); }
+  bool empty() const { return parsed_.empty(); }
 
   void AddText(StringPiece text);
   void AddSpecial(StringPiece text);
 
   /// Construct a human-readable representation of the parsed state,
   /// for use in tests.
-  [[nodiscard]] std::string Serialize() const;
+  std::string Serialize() const;
 
 private:
   friend struct ManifestToBinParser;
@@ -61,13 +61,13 @@ private:
 struct Rule {
   explicit Rule(std::string name) : name_(std::move(name)) { }
 
-  [[nodiscard]] const std::string& name() const { return name_; }
+  const std::string& name() const { return name_; }
 
   void AddBinding(const std::string& key, const EvalString& val);
 
   static bool IsReservedBinding(const std::string& var);
 
-  [[nodiscard]] const EvalString* GetBinding(const std::string& key) const;
+  const EvalString* GetBinding(const std::string& key) const;
 
  private:
   // Allow the parsers to reach into this object and fill out its fields.
@@ -91,7 +91,7 @@ struct BindingEnv : public Env {
   void AddRule(const Rule* rule);
   const Rule* LookupRule(const std::string& rule_name);
   const Rule* LookupRuleCurrentScope(const std::string& rule_name);
-  [[nodiscard]] const std::map<std::string, const Rule*>& GetRules() const;
+  const std::map<std::string, const Rule*>& GetRules() const;
 
   void AddBinding(const std::string& key, const std::string& val);
 
