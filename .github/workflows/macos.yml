@@ -45,6 +45,10 @@ jobs:
     - name: Test ninja
       run: ctest -C Release -vv
       working-directory: build
+      
+    - name: Test ninja canon_perftest
+      run: ./canon_perftest
+      working-directory: build
     
     - name: Create ninja archive
       shell: bash
