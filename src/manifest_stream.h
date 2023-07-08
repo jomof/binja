@@ -7,6 +7,9 @@
 #include <istream>
 #include "eval_env.h"
 #include <fstream>
+#include <unordered_map>
+#include <cassert>
+#include <cstring>
 
 typedef uint32_t man_offset_t;
 typedef uint16_t man_node_byte_count_t;
@@ -403,10 +406,19 @@ class manifest_istream
 
   bool IsCurrentVersion() {
     auto node = reinterpret_cast<const ParseStartNode*>(p);
-    assert(node->size == sizeof(ParseStartNode));
-    assert(node->type == man_node_t::START_PARSE);
-    return node->version == MANIFEST_SCHEMA_VERSION
-        && (node->checksum == 0 || node->checksum == MANIFEST_SCHEMA_CHECKSUM);
+    if (node->type != man_node_t::START_PARSE) {
+      return false;
+    }
+    if (node->size != sizeof(ParseStartNode)) {
+      return false;
+    }
+    if (node->version != MANIFEST_SCHEMA_VERSION) {
+      return false;
+    }
+    if (node->checksum == 0 || node->checksum == MANIFEST_SCHEMA_CHECKSUM) {
+      return false;
+    }
+    return true;
   }
 
   void EatEndParse() {
