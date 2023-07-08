@@ -402,21 +402,6 @@ if platform.supports_ppoll() and not options.force_pselect:
 if platform.supports_ninja_browse():
     cflags.append('-DNINJA_HAVE_BROWSE')
 
-# Generate flatbuffer header
-if platform.platform() == 'darwin':
-    flatc = './vendor/google/flatbuffers/flatbuffers-23.5.26/bin/darwin/flatc'
-elif platform.platform() == 'windows':
-    flatc = './vendor/google/flatbuffers/flatbuffers-23.5.26/bin/windows/flatc.exe'
-else:
-    flatc = './vendor/google/flatbuffers/flatbuffers-23.5.26/bin/linux/flatc'
-
-flatc_proc = subprocess.Popen([flatc, '--proto', '-o', 'build/flatc','-c', 'src/binja.proto'])
-flatc_proc.wait()
-print()
-
-# Flatbuffer headers
-cflags.append('-I./vendor/google/flatbuffers/flatbuffers-23.5.26/src/include')
-cflags.append('-I./build/flatc')
 
 # Search for generated headers relative to build dir.
 cflags.append('-I.')

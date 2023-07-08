@@ -17,7 +17,8 @@
 
 #include "parser.h"
 #include "manifest_parser_options.h"
-#include "binja_generated.h"
+#include <sstream>
+#include "manifest_stream.h"
 
 struct BindingEnv;
 struct EvalString;
@@ -29,14 +30,23 @@ struct ManifestToBinParser : public Parser {
 
   /// Parse a text string of input.  Used by tests.
   bool ParseTest(const std::string& input, std::string* err) {
-    return Parse("input", input, err);
+    std::stringstream dummy;
+    return Parse("input", input, dummy, err);
   }
-
-
 
   /// Parse a file, given its contents as a string.
   bool Parse(const std::string& filename, const std::string& input,
              std::string* err);
+
+  bool Parse(
+      const std::string& filename,
+      const std::string& input,
+      std::ostream& output,
+      std::string* err) {
+    manifest_ostream manifest_out(output);
+    out_ = &manifest_out;
+    return Parse(filename, input, err);
+  }
 public:
   /// Parse various statement types.
   bool ParsePool(std::string* err);
@@ -48,21 +58,8 @@ public:
   /// Parse either a 'subninja' or 'include' line.
   bool ParseFileInclude(bool new_scope, std::string* err);
 
-  /// Binja flatbuffer support
-  flatbuffers::Offset<binja::ParseEvalString> CreateParseEvalString(const EvalString & eval_string);
-  flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<binja::ParseEvalString>>> CreateParseEvalStringVector(const std::vector<EvalString> & eval_strings);
-
-  flatbuffers::FlatBufferBuilder fb_;
-  std::vector<flatbuffers::Offset<binja::ParseNode>> nodes_;
-  std::vector<flatbuffers::Offset<binja::ParseRule>> rules_;
-  std::vector<flatbuffers::Offset<binja::ParseBuild>> builds_;
-  std::vector<flatbuffers::Offset<binja::ParseDefault>> defaults_;
-  std::vector<flatbuffers::Offset<binja::ParsePool>> pools_;
-  std::vector<flatbuffers::Offset<binja::ParseBinding>> bindings_;
-  std::vector<flatbuffers::Offset<binja::ParseInclude>> includes_;
+  manifest_ostream * out_ = nullptr;
   unsigned int next_node_ = 0;
-
-  const binja::CompiledBuildNinja * GetCompiled();
 };
 
 #endif  // NINJA_MANIFEST_TO_BIN_PARSER_H_

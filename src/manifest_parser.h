@@ -21,14 +21,12 @@
 
 struct BindingEnv;
 struct EvalString;
-struct ManifestToBinParser;
-namespace binja { struct CompiledBuildNinja; }
+class manifest_istream;
 
 /// Parses .ninja files.
 struct ManifestParser : public Parser {
   ManifestParser(State* state, FileReader* file_reader,
                  ManifestParserOptions options = ManifestParserOptions());
-  virtual ~ManifestParser();
 
   /// Parse a text string of input.  Used by tests.
   bool ParseTest(const std::string& input, std::string* err) {
@@ -52,10 +50,8 @@ private:
 
   std::shared_ptr<BindingEnv> env_;
   ManifestParserOptions options_;
-  ManifestToBinParser* m2b_;
   bool quiet_;
-  unsigned int next_node_ = 0;
-  const binja::CompiledBuildNinja * compiled_ = 0;
+  std::shared_ptr<manifest_istream> in_;
 };
 
 #endif  // NINJA_MANIFEST_PARSER_H_

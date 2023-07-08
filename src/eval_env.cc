@@ -26,8 +26,6 @@ BindingEnv::~BindingEnv() {
   rules_.clear();
 }
 
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "misc-no-recursion"
 string BindingEnv::LookupVariable(const string& var) {
   auto i = bindings_.find(var);
   if (i != bindings_.end())
@@ -36,7 +34,6 @@ string BindingEnv::LookupVariable(const string& var) {
     return parent_->LookupVariable(var);
   return "";
 }
-#pragma clang diagnostic pop
 
 void BindingEnv::AddBinding(const string& key, const string& val) {
   bindings_[key] = val;
@@ -54,8 +51,6 @@ const Rule* BindingEnv::LookupRuleCurrentScope(const string& rule_name) {
   return i->second;
 }
 
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "misc-no-recursion"
 const Rule* BindingEnv::LookupRule(const string& rule_name) {
   auto i = rules_.find(rule_name);
   if (i != rules_.end())
@@ -64,7 +59,6 @@ const Rule* BindingEnv::LookupRule(const string& rule_name) {
     return parent_->LookupRule(rule_name);
   return nullptr;
 }
-#pragma clang diagnostic pop
 
 void Rule::AddBinding(const string& key, const EvalString& val) {
   bindings_[key] = val;

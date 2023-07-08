@@ -22,8 +22,8 @@
 #include "state.h"
 #include "util.h"
 #include "version.h"
-#include "binja_generated.h"
 #include <fstream>
+#include "disk_interface.h"
 
 using namespace std;
 
@@ -31,126 +31,139 @@ ManifestParser::ManifestParser(State* state, FileReader* file_reader,
                                ManifestParserOptions options)
     : Parser(state, file_reader),
       options_(options),
-      m2b_(new ManifestToBinParser(state, file_reader)),
       quiet_(false) {
   env_ = state->bindings_;
 }
 
-ManifestParser::~ManifestParser() {
-  delete m2b_;
-}
-
-const binja::ParseRule * GetRule(const binja::CompiledBuildNinja & compiled, unsigned int index) {
-  auto node = compiled.parse_node()->Get(index);
-  assert(node->type() == binja::ParseNode_::Type_RULE);
-  auto table_offset = node->table_offset();
-  return compiled.rule()->Get(table_offset);
-}
-
-const binja::ParseBuild * GetBuild(const binja::CompiledBuildNinja & compiled, unsigned int index) {
-  auto node = compiled.parse_node()->Get(index);
-  assert(node->type() == binja::ParseNode_::Type_BUILD);
-  return compiled.build()->Get(node->table_offset());
-}
-
-const binja::ParsePool * GetPool(const binja::CompiledBuildNinja & compiled, unsigned int index) {
-  auto node = compiled.parse_node()->Get(index);
-  assert(node->type() == binja::ParseNode_::Type_POOL);
-  return compiled.pool()->Get(node->table_offset());
-}
-
-const binja::ParseDefault * GetDefault(const binja::CompiledBuildNinja & compiled, unsigned int index) {
-  auto node = compiled.parse_node()->Get(index);
-  assert(node->type() == binja::ParseNode_::Type_DEFAULT);
-  return compiled.default_()->Get(node->table_offset());
-}
-
-const binja::ParseBinding * GetBinding(const binja::CompiledBuildNinja & compiled, unsigned int index) {
-  auto node = compiled.parse_node()->Get(index);
-  assert(node->type() == binja::ParseNode_::Type_BINDING);
-  return compiled.binding()->Get(node->table_offset());
-}
-
-const binja::ParseInclude * GetInclude(const binja::CompiledBuildNinja & compiled, unsigned int index) {
-  auto node = compiled.parse_node()->Get(index);
-  assert(node->type() == binja::ParseNode_::Type_INCLUDE);
-  return compiled.include()->Get(node->table_offset());
-}
-
-string Evaluate(Env * env, const binja::ParseEvalString & parsed) {
+string Evaluate(Env * env, const man_vector_iterable<man_eval_pair> parsed) {
   string result;
-  for (const auto& piece : *parsed.piece()) {
-    if (piece->type() == binja::ParseStringPiece_::Type_RAW)
-      result.append(piece->value()->c_str());
+  for (const auto& piece : parsed) {
+    auto str = piece.value.c_str(parsed.buffer);
+    if (piece.type == man_eval_t::RAW)
+      result.append(str);
     else
-      result.append(env->LookupVariable(piece->value()->c_str()));
+      result.append(env->LookupVariable(str));
   }
   return result;
 }
 
-EvalString ToEvalString(const binja::ParseEvalString& parse_eval_string) {
+EvalString ToEvalString(const man_vector_iterable<man_eval_pair>& parse_eval_string) {
   EvalString result;
-  for(const auto& element : *parse_eval_string.piece()) {
-    if (element->type() == binja::ParseStringPiece_::Type_RAW) {
-      result.AddText(element->value()->c_str());
+  for(const auto& element : parse_eval_string) {
+    auto str = element.value.c_str(parse_eval_string.buffer);
+    if (element.type == man_eval_t::RAW) {
+      result.AddText(str);
     } else {
-      result.AddSpecial(element->value()->c_str());
+      result.AddSpecial(str);
     }
   }
   return result;
 }
 
 void ToEvalStrings(
-    const flatbuffers::Vector<flatbuffers::Offset<binja::ParseEvalString>> & parse_eval_strings,
+    const man_vector_iterable<man_eval_string> & parse_eval_strings,
     vector<EvalString> * result) {
   for(const auto& parse_eval_string : parse_eval_strings) {
-    result->push_back(ToEvalString(*parse_eval_string));
+    result->push_back(ToEvalString(parse_eval_string.elements(parse_eval_strings.buffer)));
   }
 }
 
 bool ManifestParser::Parse(const string& filename, const string& input,
                            string* err) {
-  if (!m2b_->Parse(filename, input, err)) {
-    return false;
-  }
 
   lexer_.Start(filename, input);
-  compiled_ = m2b_->GetCompiled();
-//  if (ifstream(filename).good()) {
-//    throw filename;
-//  }
 
-  for (;next_node_ < compiled_->parse_node()->size(); ++next_node_) {
-    auto node = compiled_->parse_node()->Get(next_node_);
-    switch(node->type()) {
-    case binja::ParseNode_::Type_POOL:
+  if (std::ifstream(filename).good()) {
+    auto bin = filename + ".bin";
+    auto create = false;
+
+    if (!std::ifstream(bin).good()) {
+      cout << "Creating " << bin << " because it didn't exist" << endl;
+      create = true;
+    } else {
+      auto disk = (DiskInterface*)file_reader_;
+      auto filename_time = disk->Stat(filename, err);
+      auto bin_time = disk->Stat(bin, err);
+      if (filename_time > bin_time) {
+        cout << "Recreating " << bin << " because it was older than " << filename << endl;
+        create = true;
+      }
+    }
+
+    if (!create) {
+      in_ = manifest_istream::create(bin);
+      if (!in_->IsCurrentVersion()) {
+        cout << "Recreating " << bin << " because it had a different schema version" << endl;
+        create = true;
+      }
+    }
+
+    if (create) {
+      std::ofstream outfile(bin, std::ios::binary);
+
+      ManifestToBinParser m2b(state_, file_reader_);
+      if (!m2b.Parse(filename, input, outfile, err)) {
+        outfile.close();
+        return false;
+      }
+      outfile.close();
+    } else {
+      cout << "Reading existing " << bin << endl;
+    }
+    in_ = manifest_istream::create(bin);
+    if (in_ == nullptr) {
+      lexer_.Error("could not create " + bin, err);
+      return false;
+    }
+
+  } else {
+    std::stringstream memory(std::ios::binary | std::ios::in | std::ios::out);
+    ManifestToBinParser m2b(state_, file_reader_);
+    if (!m2b.Parse(filename, input, memory, err)) {
+      return false;
+    }
+    auto str = memory.str();
+    char* buffer = new char[str.size()];
+    std::memcpy(buffer, str.c_str(), str.size());
+    in_ = make_shared<manifest_istream>(buffer, true);
+  }
+
+
+  in_->EatStartParse();
+
+
+  man_node_t type;
+  while ((type = in_->NextRecordType()) != man_node_t::END_PARSE) {
+    switch(type) {
+    case man_node_t::POOL:
       if (!ParsePool(err))
         return false;
       break;
-    case binja::ParseNode_::Type_BUILD:
+    case man_node_t::BUILD:
       if (!ParseEdge(err))
         return false;
       break;
-    case binja::ParseNode_::Type_RULE:
+    case man_node_t::RULE:
       if (!ParseRule(err))
         return false;
       break;
-    case binja::ParseNode_::Type_DEFAULT:
+    case man_node_t::DEFAULT:
       if (!ParseDefault(err))
         return false;
       break;
-    case binja::ParseNode_::Type_BINDING: {
-      auto binding = GetBinding(*compiled_, next_node_);
-      string value = Evaluate(env_.get(), *binding->value());
+    case man_node_t::BINDING: {
+      auto binding = in_->ReadBinding();
+      string value = Evaluate(env_.get(), binding->value.elements(in_->buffer));
+      string key = std::string(binding->name.c_str(in_->buffer));
       // Check ninja_required_version immediately so we can exit
       // before encountering any syntactic surprises.
-      if (binding->key()->str() == "ninja_required_version") {
+      if (key == "ninja_required_version") {
         CheckNinjaVersion(value);
       }
-      env_->AddBinding(binding->key()->c_str(), value);
+      env_->AddBinding(key, value);
       break;
     }
-    case binja::ParseNode_::Type_INCLUDE:
+    case man_node_t::INCLUDE:
       if (!ParseFileInclude(err))
         return false;
       break;
@@ -158,37 +171,38 @@ bool ManifestParser::Parse(const string& filename, const string& input,
       assert(0); // Unexpected
     }
   }
+  in_->EatEndParse();
   return true;
 }
 
 
 bool ManifestParser::ParsePool(string* err) {
-  auto node = GetPool(*compiled_, next_node_);
-  auto name = node->name()->str();
-  auto depth_str = Evaluate(env_.get(), *node->depth());
+  auto node = in_->ReadPool();
+  auto name = node->name.c_str(in_->buffer);
+  auto depth_str = Evaluate(env_.get(), node->depth.elements(in_->buffer));
   auto depth = (int)strtol(depth_str.c_str(), nullptr, 10);
 
   if (state_->LookupPool(name) != nullptr)
-    return lexer_.Error("duplicate pool '" + name + "'", err, node->pool_position());
+    return lexer_.Error("duplicate pool '" + string(name) + "'", err, node->pool_position);
 
   if (depth < 0)
-    return lexer_.Error("invalid pool depth", err, node->depth_position());
+    return lexer_.Error("invalid pool depth", err, node->depth_position);
 
   state_->AddPool(new Pool(name, depth));
   return true;
 }
 
 bool ManifestParser::ParseRule(string* err) {
-  auto node = GetRule(*compiled_, next_node_);
+  auto node = in_->ReadRule();
+  auto name = node->name.c_str(in_->buffer);
+  if (env_->LookupRuleCurrentScope(name) != nullptr)
+    return lexer_.Error("duplicate rule '" + string(name) + "'", err, node->rule_position);
 
-  if (env_->LookupRuleCurrentScope(node->name()->c_str()) != nullptr)
-    return lexer_.Error("duplicate rule '" + node->name()->str() + "'", err, node->rule_position());
-
-  Rule* rule = new Rule(node->name()->c_str());  // XXX scoped_ptr
-  for (const auto& binding : *node->binding()) {
+  Rule* rule = new Rule(name);  // XXX scoped_ptr
+  for (const auto& binding : node->bindings.elements(in_->buffer)) {
     rule->AddBinding(
-        binding->key()->c_str(),
-        ToEvalString(*binding->value()));
+        binding.name.c_str(in_->buffer),
+        ToEvalString(binding.value.elements(in_->buffer)));
   }
 
   env_->AddRule(rule);
@@ -196,41 +210,45 @@ bool ManifestParser::ParseRule(string* err) {
 }
 
 bool ManifestParser::ParseDefault(string* err) {
-  auto node = GetDefault(*compiled_, next_node_);
-  auto defaults = node->default_();
-  for(size_t i = 0; i < defaults->size(); ++i) {
-    auto def = defaults->Get(i);
-    auto path = Evaluate(env_.get(), *def);
+  auto node = in_->ReadDefault();
+  auto defaults = node->defaults.elements(in_->buffer);
+  for(size_t i = 0; i < defaults.size(); ++i) {
+    auto path = Evaluate(env_.get(), defaults[i].elements(in_->buffer));
     if (path.empty())
-      return lexer_.Error("empty path", err, node->default_positions()->Get(i));
+      return lexer_.Error("empty path", err, node->default_positions.elements(in_->buffer)[i]);
     uint64_t slash_bits;  // Unused because this only does lookup.
     CanonicalizePath(&path, &slash_bits);
     std::string default_err;
-    if (!state_->AddDefault(path, &default_err))
-      return lexer_.Error(default_err, err, node->default_positions()->Get(i));
+    if (!state_->AddDefault(path, &default_err)) {
+      auto position = node->default_positions.elements(in_->buffer)[i];
+      return lexer_.Error(default_err, err, position);
+    }
   }
   return true;
 }
 
 bool ManifestParser::ParseEdge(string* err) {
-  auto node = GetBuild(*compiled_, next_node_);
+  auto node = in_->ReadBuild();
   vector<EvalString> ins, outs, validations;
-  ToEvalStrings(*node->in(), &ins);
-  ToEvalStrings(*node->out(), &outs);
-  ToEvalStrings(*node->validations(), &validations);
-  auto bindings = node->bindings();
-  auto implicit = node->implicit_in_count();
-  auto implicit_outs = node->implicit_out_count();
-  auto order_only = node->order_only_in_count();
+  ToEvalStrings(node->in.elements(in_->buffer), &ins);
+  ToEvalStrings(node->out.elements(in_->buffer), &outs);
+  ToEvalStrings(node->validations.elements(in_->buffer), &validations);
+  auto bindings = node->bindings.elements(in_->buffer);
+  auto implicit = node->implicit_in_count;
+  auto implicit_outs = node->implicit_out_count;
+  auto order_only = node->order_only_in_count;
 
-  const Rule* rule = env_->LookupRule(node->name()->c_str());
+  auto rule_name = node->rule_name.c_str(in_->buffer);
+  const Rule* rule = env_->LookupRule(rule_name);
   if (!rule)
-    return lexer_.Error("unknown build rule '" + node->name()->str() + "'", err, node->rule_position());
+    return lexer_.Error("unknown build rule '" + string(rule_name) + "'", err, node->rule_position);
 
   // Bindings on edges are rare, so allocate per-edge envs only when needed.
-  auto env = bindings->size() != 0 ? std::make_shared<BindingEnv>(env_) : env_;
-  for(const auto& binding: *bindings) {
-    env->AddBinding(binding->key()->c_str(), Evaluate(env.get(), *binding->value()));
+  auto env = bindings.size() != 0 ? std::make_shared<BindingEnv>(env_) : env_;
+  for(const auto& binding: bindings) {
+    env->AddBinding(
+        binding.name.c_str(in_->buffer),
+        Evaluate(env.get(), binding.value.elements(in_->buffer)));
   }
 
   Edge* edge = state_->AddEdge(rule);
@@ -240,7 +258,7 @@ bool ManifestParser::ParseEdge(string* err) {
   if (!pool_name.empty()) {
     Pool* pool = state_->LookupPool(pool_name);
     if (pool == nullptr)
-      return lexer_.Error("unknown pool name '" + pool_name + "'", err, node->final_position());
+      return lexer_.Error("unknown pool name '" + pool_name + "'", err, node->final_position);
     edge->pool_ = pool;
   }
 
@@ -248,12 +266,12 @@ bool ManifestParser::ParseEdge(string* err) {
   for (size_t i = 0, e = outs.size(); i != e; ++i) {
     string path = outs[i].Evaluate(env.get());
     if (path.empty())
-      return lexer_.Error("empty path", err, node->final_position());
+      return lexer_.Error("empty path", err, node->final_position);
     uint64_t slash_bits;
     CanonicalizePath(&path, &slash_bits);
     if (!state_->AddOut(edge, path, slash_bits)) {
       if (options_.dupe_edge_action_ == kDupeEdgeActionError) {
-        lexer_.Error("multiple rules generate " + path, err, node->final_position());
+        lexer_.Error("multiple rules generate " + path, err, node->final_position);
         return false;
       } else {
         if (!quiet_) {
@@ -281,7 +299,7 @@ bool ManifestParser::ParseEdge(string* err) {
   for (auto & in : ins) {
     string path = in.Evaluate(env.get());
     if (path.empty())
-      return lexer_.Error("empty path", err, node->final_position());
+      return lexer_.Error("empty path", err, node->final_position);
     uint64_t slash_bits;
     CanonicalizePath(&path, &slash_bits);
     state_->AddIn(edge, path, slash_bits);
@@ -293,7 +311,7 @@ bool ManifestParser::ParseEdge(string* err) {
   for (auto & validation : validations) {
     string path = validation.Evaluate(env.get());
     if (path.empty())
-      return lexer_.Error("empty path", err, node->final_position());
+      return lexer_.Error("empty path", err, node->final_position);
     uint64_t slash_bits;
     CanonicalizePath(&path, &slash_bits);
     state_->AddValidation(edge, path, slash_bits);
@@ -330,21 +348,21 @@ bool ManifestParser::ParseEdge(string* err) {
     auto dgi =
       std::find(edge->inputs_.begin(), edge->inputs_.end(), edge->dyndep_);
     if (dgi == edge->inputs_.end()) {
-      return lexer_.Error("dyndep '" + dyndep + "' is not an input", err, node->final_position());
+      return lexer_.Error("dyndep '" + dyndep + "' is not an input", err, node->final_position);
     }
   }
   return true;
 }
 
 bool ManifestParser::ParseFileInclude(string* err) {
-  auto node = GetInclude(*compiled_, next_node_);
-  string path = Evaluate(env_.get(), *node->path());
+  auto node = in_->ReadInclude();
+  string path = Evaluate(env_.get(), node->path.elements(in_->buffer));
 
   ManifestParser subparser(state_, file_reader_, options_);
-  if (node->new_scope()) {
+  if (node->new_scope) {
     subparser.env_ = std::make_shared<BindingEnv>(env_);
   } else {
     subparser.env_ = env_;
   }
-  return subparser.Load(path, err, &lexer_, node->final_position());
+  return subparser.Load(path, err, &lexer_, node->final_position);
 }

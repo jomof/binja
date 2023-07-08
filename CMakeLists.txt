@@ -6,8 +6,6 @@ include(ExternalProject)
 
 option(NINJA_BUILD_BINARY "Build ninja binary" ON)
 option(NINJA_FORCE_PSELECT "Use pselect() even on platforms that provide ppoll()" OFF)
-option(NINJA_BUILD_FLATC "Use to enable build and use of flatc.exe" OFF)
-option(NINJA_JUST_BUILD_FLATC "Use to enable build of flatc.exe" OFF)
 
 project(ninja CXX)
 
@@ -16,50 +14,6 @@ if(POLICY CMP0135)
 endif()
 
 set(CMAKE_CXX_STANDARD 17)
-
-# --- flatc
-if(NOT NINJA_BUILD_FLATC)
-	if(WIN32)
-		set(FLATC_EXECUTABLE ${CMAKE_SOURCE_DIR}/vendor/google/flatbuffers/flatbuffers-23.5.26/bin/windows/flatc.exe)
-	elseif(APPLE)
-		set(FLATC_EXECUTABLE ${CMAKE_SOURCE_DIR}/vendor/google/flatbuffers/flatbuffers-23.5.26/bin/darwin/flatc)
-	else()
-		set(FLATC_EXECUTABLE ${CMAKE_SOURCE_DIR}/vendor/google/flatbuffers/flatbuffers-23.5.26/bin/linux/flatc)
-	endif()
-else()
-	# Build flatc
-	set(FLATC_BUILD_DEP flatc)
-	if(WIN32)
-		set(FLATC_EXECUTABLE ${CMAKE_BINARY_DIR}/vendor/google/flatbuffers/flatbuffers-23.5.26/src/$<CONFIG>/flatc.exe)
-		set(FLATBUFFERS_STATIC_FLATC ON)
-	elseif(APPLE)
-		set(FLATC_EXECUTABLE ${CMAKE_BINARY_DIR}/vendor/google/flatbuffers/flatbuffers-23.5.26/src/flatc)
-		set(FLATBUFFERS_STATIC_FLATC OFF)
-	else()
-		set(FLATC_EXECUTABLE ${CMAKE_BINARY_DIR}/vendor/google/flatbuffers/flatbuffers-23.5.26/src/flatc)
-		set(FLATBUFFERS_STATIC_FLATC ON)
-	endif()
-endif()
-
-if(NINJA_BUILD_FLATC OR NINJA_JUST_BUILD_FLATC)
-	set(FLATBUFFERS_INSTALL ON)
-	set(FLATBUFFERS_BUILD_TESTS OFF)
-	add_subdirectory(${CMAKE_SOURCE_DIR}/vendor/google/flatbuffers/flatbuffers-23.5.26/src)
-endif()
-
-set(FLATC_INCLUDE_FOLDER ${CMAKE_SOURCE_DIR}/vendor/google/flatbuffers/flatbuffers-23.5.26/src/include)
-set(FLATC_SCHEMA_FBS ${CMAKE_SOURCE_DIR}/src/binja.proto)
-set(FLATC_GENERATED_FOLDER ${CMAKE_BINARY_DIR}/flatc/include)
-set(FLATC_HEADER ${FLATC_GENERATED_FOLDER}/binja_generated.h)
-
-file(MAKE_DIRECTORY ${FLATC_GENERATED_FOLDER})
-add_custom_command(
-		OUTPUT ${FLATC_HEADER}
-		COMMAND ${FLATC_EXECUTABLE}
-		ARGS --proto -o ${FLATC_GENERATED_FOLDER} -c ${FLATC_SCHEMA_FBS}
-		DEPENDS ${FLATC_SCHEMA_FBS} ${FLATC_BUILD_DEP}
-		COMMENT "Running flatc on ${FLATC_SCHEMA_FBS}"
-		VERBATIM)
 
 # --- optional link-time optimization
 check_ipo_supported(RESULT lto_supported OUTPUT error)
@@ -174,7 +128,7 @@ add_library(libninja OBJECT
 	src/build.cc
 	src/clean.cc
 	src/clparser.cc
-		src/dyndep.cc
+	src/dyndep.cc
 	src/dyndep_parser.cc
 	src/debug_flags.cc
 	src/deps_log.cc
@@ -186,6 +140,7 @@ add_library(libninja OBJECT
 	src/json.cc
 	src/line_printer.cc
 	src/manifest_parser.cc
+	src/manifest_stream.h
 	src/manifest_to_bin_parser.cc
 	src/metrics.cc
 	src/missing_deps.cc
