@@ -415,7 +415,7 @@ class manifest_istream
     if (node->version != MANIFEST_SCHEMA_VERSION) {
       return false;
     }
-    if (node->checksum == 0 || node->checksum == MANIFEST_SCHEMA_CHECKSUM) {
+    if (node->checksum != 0 && node->checksum != MANIFEST_SCHEMA_CHECKSUM) {
       return false;
     }
     return true;
